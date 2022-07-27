@@ -111,7 +111,8 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=0,
 def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x, y)
                              R00_slice, R0H_slice,     # Bragg reflection information
                              l_cavity, l_undulator, w_cavity,  # cavity parameter
-                             lambd_slice, kx_mesh, ky_mesh):  #fld slice information
+                             lambd_slice, kx_mesh, ky_mesh, xmesh, ymesh, #fld slice information
+                             verboseQ): 
     
     # propagate one slice from Und end to Und start
     # take a slice in real space, unpadded, return a slice in real space, unpadded
@@ -310,16 +311,7 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
     
     #---------------------------------------------------------------------------------------------------
     # get Bragg mirror response
-    #---------------------------------------------------------------------------------------------------
-    
-    # focal length of the lens
-    flens1 = (l_cavity + w_cavity)/2
-    flens2 = (l_cavity + w_cavity)/2
-    
-    # propagation length in cavity
-    z_und_start = (l_cavity - l_undulator)/2
-    z_und_end = z_und_start + l_undulator
-    
+    #---------------------------------------------------------------------------------------------------    
     
     # get Bragg mirror response matrix
     R0H, R00 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
@@ -335,94 +327,16 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
         # take the frequency slice
         fld_slice = np.squeeze(fld[k, :, :])
         
-        # pad in x
-        if npadx > 0:
-            fld_slice = pad_dfl_slice_x(fld_slice, [int(npadx),int(npadx)])
-        
-        # fft to kx, ky space
-        t0 = time.time()
-        fld_slice = np.fft.fftshift(fft2(fld_slice), axes=(0,1))
-        if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
-        
         # take the reflectivity and transmission slice
         R00_slice = np.squeeze(R00[k, :])
         R0H_slice = np.squeeze(R0H[k, :])
+        lambd_slice = lambd[k]
         
-        # drift from undulator to M1
-        Ldrift = l_cavity - z_und_end
-        
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-    
-        
-        # reflect from M1
-        fld_slice = np.einsum('i,ij->ij',R0H_slice,fld_slice)
-        # trasmission through M1
-        #fld_slice = np.einsum('i,ij->ij',R00_slice,fld_slice)
-        
-        
-        # drift to the lens
-        Ldrift = w_cavity/2
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        
-        # lens
-        f = flens1
-        #ifft to the real space
-        fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-        #apply intracavity focusing CRL
-        fld_slice *= np.exp(-1j*np.pi/(f*lambd[k])*(xmesh**2 + ymesh**2))
-        #fft to kx, ky space, check it!!!!
-        fld_slice = np.fft.fftshift(fft2(fld_slice))
-        
-        
-        
-        # drift to M2
-        Ldrift = w_cavity/2
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        
-        # reflect from M2
-        fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
-        
-        # drift to M3
-        Ldrift = l_cavity
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        # reflect from M3
-        fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
-        
-        # drift to lens
-        Ldrift = w_cavity/2
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        # lens
-        f = flens2
-        #ifft to the real space
-        fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-        #apply intracavity focusing CRL
-        fld_slice *= np.exp(-1j*np.pi/(f*lambd[k])*(xmesh**2 + ymesh**2))
-        #fft to kx, ky space, check it!!!!
-        fld_slice = np.fft.fftshift(fft2(fld_slice))
-        
-        # drift to M4
-        Ldrift = w_cavity/2
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        # reflect from M4
-        fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
-        
-        # drift to undulator start
-        Ldrift = z_und_start
-        fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd[k], kx = kx_mesh, ky = ky_mesh)
-        
-        # recirculation finished, ifft to real space
-        fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-        
-        
-        # unpad in x
-        if npadx > 0:
-            fld_slice = unpad_dfl_slice_x(fld_slice,  [int(npadx),int(npadx)])
+        # propagate the slice from und end to und start
+        fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+                             R00_slice = R00_slice, R0H_slice = R0H_slice,     
+                             l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
+                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, verboseQ = verboseQ)
         
         # record
         fld[k,:, :] = fld_slice
