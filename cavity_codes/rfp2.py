@@ -423,7 +423,7 @@ def plot_fld_3d(fld, dgrid = 400.e-6, dt=1e-6/3e8):
 
     plt.tight_layout(); plt.show()
 
-def read_dfl(filename, ncar=251, verboseQ=1, conjugate_field_for_genesis=True, swapxyQ=True):
+def read_dfl(filename, ncar=251, verboseQ=1, conjugate_field_for_genesis=False, swapxyQ=False):
     
     t0 = time.time()
     fld = np.fromfile(filename, dtype='complex128')
