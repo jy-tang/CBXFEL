@@ -4,6 +4,7 @@ from cavity_codes.rfp2 import *
 from cavity_codes.Bragg_mirror import *
 import time
 import pickle
+from mpi4py import MPI
 
 def propagate_slice_kspace(field, z, xlamds, kx, ky):
     H = np.exp(-1j*xlamds*z*(kx**2 + ky**2)/(4*np.pi))
@@ -224,98 +225,163 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
     
     t00 = time.time()
     
+    comm = MPI.COMM_WORLD
+    nprocs = comm.Get_size()
+    rank = comm.Get_rank()
+    
+    
     h_Plank = 4.135667696e-15      # Plank constant [eV-sec]
     c_speed  = 299792458           # speed of light[m/sec]
     
     dt = xlamds*zsep * max(1,isradi) /c_speed
-    #-------------------------------------------------------------------------------------------
-    # read or make field 
-    #------------------------------------------------------------------------------------------- 
-    if readfilename == None:
-        saveFilenamePrefix = 'test'
-    else:
-        saveFilenamePrefix = readfilename
-        
-    if readfilename == None:
-        # make a new field
-        t0 = time.time()
-        fld = make_gaus_beam(ncar= ncar, dgrid=dgrid, w0=40e-6, dt=dt, nslice=1024, trms=10.e-15)
-        print('took',time.time()-t0,'seconds total to make field with dimensions',fld.shape)
     
-    else:
-        # read dfl file on disk
-        print('Reading in',readfilename)
-        t0 = time.time()
-        fld = read_dfl(readfilename, ncar=ncar,conjugate_field_for_genesis=False, swapxyQ=False) # read the field from disk
-        print('took',time.time()-t0,'seconds total to read in and format the field with dimensions',fld.shape)
-        fld = fld[::isradi,:,:]
-        print("The shape before padding is ", fld.shape)
-    
-    if showPlotQ:
-        # plot the imported field
-        plot_fld_marginalize_t(fld, dgrid, dt=dt, saveFilename=saveFilenamePrefix+'_init_xy.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ) 
-        plot_fld_slice(fld, dgrid, dt=dt, slice=-2, saveFilename=saveFilenamePrefix+'_init_tx.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
-        plot_fld_slice(fld, dgrid, dt=dt, slice=-1, saveFilename=saveFilenamePrefix+'_init_ty.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
-        plot_fld_power(fld, dt=dt, saveFilename=saveFilenamePrefix+'_init_t.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
+    nslice_padded = npadt + 2*int(npadt)
+    nx = ny = ncar
+    nx_padded = ncar + 2*int(npadx)
     
     
-    energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt)
-    
-    init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
-    
-    #--------------------------------------------------------------------------------------------------
-    # fft in time domain to get spectral representaion
-    #--------------------------------------------------------------------------------------------------
-    # pad field in time
-    if int(npadt) > 0:
-        fld = pad_dfl_t(fld, [int(npadt),int(npadt)])
-        if verboseQ: print('Padded field in time by',int(npadt),'slices (',dt*int(npadt)*1e15,'fs) at head and tail')
-    nslice_padded, _, _ = fld.shape
-    
-    # plot the field after padding
-    if showPlotQ:
-        plot_fld_marginalize_t(fld, dgrid) 
-        plot_fld_slice(fld, dgrid, dt=dt, slice=-2) 
-        plot_fld_slice(fld, dgrid, dt=dt, slice=-1)
-    
-    # fft
-    t0 = time.time()
-    fld = np.fft.fftshift(fft(fld, axis=0), axes=0)
-    if verboseQ: print('took',time.time()-t0,'seconds for fft over t')
-    
-    #--------------------------------------------------------------------------
+    #-------------------------------
     # get coordinates after padding
-    #---------------------------------------------------------------------------
-    
+    #-------------------------------
+
     # get photon energy coordinate
     hw0_eV = h_Plank * c_speed / xlamds
     Dhw_eV = h_Plank / dt 
     eph = hw0_eV + Dhw_eV / 2. * np.linspace(-1.,1., nslice_padded)
     lambd = h_Plank*c_speed/eph
-    
+
     # get kx,ky coordinates
     dx = 2. * dgrid / ncar
     Dkx = 2. * np.pi / dx
-    kx = Dkx/ 2. * np.linspace(-1.,1.,ncar+2*int(npadx))
-    ky = Dkx/ 2. * np.linspace(-1.,1.,ncar)
+    kx = Dkx/ 2. * np.linspace(-1.,1.,nx_padded)
+    ky = Dkx/ 2. * np.linspace(-1.,1.,ny)
     kx_mesh, ky_mesh = np.meshgrid(kx, ky)
     kx_mesh = kx_mesh.T
     ky_mesh = ky_mesh.T
-    
+
     # get x, y coordinates
-    xs = (np.arange(ncar+2*int(npadx)) - np.floor((ncar+2*int(npadx))/2))*dx
-    ys = (np.arange(ncar) - np.floor(ncar/2))*dx
+    xs = (np.arange(nx_padded) - np.floor(nx_padded/2))*dx
+    ys = (np.arange(ny) - np.floor(ny/2))*dx
     xmesh, ymesh = np.meshgrid(xs, ys)
     xmesh = xmesh.T
     ymesh = ymesh.T
-    
-    #---------------------------------------------------------------------------------------------------
+
+    #----------------------------
     # get Bragg mirror response
-    #---------------------------------------------------------------------------------------------------    
-    
-    # get Bragg mirror response matrix
+    #----------------------------    
+
     R0H, R00 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
-                         verboseQ = True, showPlotQ = showPlotQ, xlim = [9831,9833], ylim = [-10, 10])
+                             verboseQ = True, showPlotQ = showPlotQ, xlim = [9831,9833], ylim = [-10, 10])    
+    
+    
+    #-------------------------------------------------------------------------------------------
+    # read or make field on root node
+    #------------------------------------------------------------------------------------------- 
+    if rank == 0:                    
+        if readfilename == None:
+            saveFilenamePrefix = 'test'
+        else:
+            saveFilenamePrefix = readfilename
+
+        if readfilename == None:
+            # make a new field
+            t0 = time.time()
+            fld = make_gaus_beam(ncar= ncar, dgrid=dgrid, w0=40e-6, dt=dt, nslice=1024, trms=10.e-15)
+            print('took',time.time()-t0,'seconds total to make field with dimensions',fld.shape)
+
+        else:
+            # read dfl file on disk
+            print('Reading in',readfilename)
+            t0 = time.time()
+            fld = read_dfl(readfilename, ncar=ncar,conjugate_field_for_genesis=False, swapxyQ=False) # read the field from disk
+            print('took',time.time()-t0,'seconds total to read in and format the field with dimensions',fld.shape)
+            fld = fld[::isradi,:,:]
+            print("The shape before padding is ", fld.shape)
+
+        if showPlotQ:
+            # plot the imported field
+            plot_fld_marginalize_t(fld, dgrid, dt=dt, saveFilename=saveFilenamePrefix+'_init_xy.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ) 
+            plot_fld_slice(fld, dgrid, dt=dt, slice=-2, saveFilename=saveFilenamePrefix+'_init_tx.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
+            plot_fld_slice(fld, dgrid, dt=dt, slice=-1, saveFilename=saveFilenamePrefix+'_init_ty.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
+            plot_fld_power(fld, dt=dt, saveFilename=saveFilenamePrefix+'_init_t.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
+
+
+        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt)
+
+        init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+    
+        #--------------------------------------------------
+        # fft in time domain to get spectral representaion
+        #--------------------------------------------------
+        # pad field in time
+        if int(npadt) > 0:
+            fld = pad_dfl_t(fld, [int(npadt),int(npadt)])
+            if verboseQ: print('Padded field in time by',int(npadt),'slices (',dt*int(npadt)*1e15,'fs) at head and tail')
+        #nslice_padded, nx, ny = fld.shape
+
+        # plot the field after padding
+        if showPlotQ:
+            plot_fld_marginalize_t(fld, dgrid) 
+            plot_fld_slice(fld, dgrid, dt=dt, slice=-2) 
+            plot_fld_slice(fld, dgrid, dt=dt, slice=-1)
+
+        # fft
+        t0 = time.time()
+        fld = np.fft.fftshift(fft(fld, axis=0), axes=0)
+        if verboseQ: print('took',time.time()-t0,'seconds for fft over t')
+
+        
+        
+        
+        
+        #------------------------------
+        # get the size of each sub-task
+        #------------------------------
+        ave, res = divmod(nslice_padded, nprocs)
+        count = [ave + 1 if p < res else ave for p in range(nprocs)]
+        count = np.array(count)
+
+        displ = [sum(count[:p])*nx*ny for p in range(nprocs)]
+        
+        if verbose:
+            print("Input data split into vectors of sizes %s" %count)
+            print("Input data split with displacements of %s" %displ)
+            
+        
+    #-------------------------------------------------------------------------------------------
+    # create variables on other nodes
+    #------------------------------------------------------------------------------------------- 
+    else:
+        fld = None
+        # initialize count on worker processes
+        count = np.zeros(nprocs, dtype=np.int)
+        displ = None
+    
+    # broadcast count
+    comm.Bcast(count, root=0)
+    comm.Barrier()
+    
+    # initialize recvbuf on all processes
+    recvbuf_real  = np.zeros((count[rank],nx,ny))
+    recvbuf_imag  = np.zeros((count[rank],nx,ny))
+    
+    comm.Scatterv([np.ascontiguousarray(np.real(fld)), count*nx*ny, displ, MPI.DOUBLE], recvbuf_real, root=0)
+    comm.Barrier()
+    
+    comm.Scatterv([np.ascontiguousarray(np.imag(fld)), count*nx*ny, displ, MPI.DOUBLE], recvbuf_imag, root=0)
+    comm.Barrier()
+    
+    print('After Scatterv, process {} has real data shape :'.format(rank), recvbuf_real.shape)
+    print('After Scatterv, process {} has imag data shape :'.format(rank), recvbuf_imag.shape)
+    
+    
+
+        
+        
+    
+    
+    
+    
     
     #---------------------------------------------------------------------------------------------------
     # propagate through cavity to return to undulator
@@ -323,7 +389,8 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
     #---------------------------------------------------------------------------------------------------
     # propagate slice by slice
     for k in range(nslice_padded):   
-        print('start to propagate slice ' + str(k))
+        if verboseQ and k%100 ==0:
+            print('finish propagating ' + str(np.round(k/nslice_padded*100,0)) + '% of the slices')
         # take the frequency slice
         fld_slice = np.squeeze(fld[k, :, :])
         
@@ -336,7 +403,7 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
         fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
-                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, verboseQ = verboseQ)
+                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, verboseQ = False)
         
         # record
         fld[k,:, :] = fld_slice
