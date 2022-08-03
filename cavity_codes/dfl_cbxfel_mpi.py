@@ -5,6 +5,7 @@ from Bragg_mirror import *
 import time
 import pickle
 from mpi4py import MPI
+import psutil
 
 def propagate_slice_kspace(field, z, xlamds, kx, ky):
     H = np.exp(-1j*xlamds*z*(kx**2 + ky**2)/(4*np.pi))
@@ -117,7 +118,13 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     
     # propagate one slice from Und end to Und start
     # take a slice in real space, unpadded, return a slice in real space, unpadded
-    
+    #------------------------------------
+    # DEBUG
+    comm = MPI.COMM_WORLD
+    nprocs = comm.Get_size()
+    rank = comm.Get_rank()
+    print("worker ", rank, ' begin propagate_slice')
+    #------------------------------------------------
      # focal length of the lens
     flens1 = (l_cavity + w_cavity)/2
     flens2 = (l_cavity + w_cavity)/2
@@ -131,18 +138,18 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # pad in x
     if npadx > 0:
         fld_slice = pad_dfl_slice_x(fld_slice, [int(npadx),int(npadx)])
-        
+    print("worker ", rank, 'line 141')
     # fft to kx, ky space
     t0 = time.time()
     fld_slice = np.fft.fftshift(fft2(fld_slice), axes=(0,1))
     if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
-    
+    print("worker ", rank, 'line 146')
         
     # drift from undulator to M1
     Ldrift = l_cavity - z_und_end
         
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
-        
+    print("worker ", rank, 'line 152')    
     
         
     # reflect from M1
@@ -164,7 +171,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
-        
+    print("worker ", rank, 'line 174')    
         
         
     # drift to M2
@@ -194,7 +201,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
-        
+    print("worker ", rank, 'line 204')    
     # drift to M4
     Ldrift = w_cavity/2
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
@@ -208,12 +215,14 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         
     # recirculation finished, ifft to real space
     fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-        
+    print("worker ", rank, 'line 218')    
         
     # unpad in x
     if npadx > 0:
         fld_slice = unpad_dfl_slice_x(fld_slice,  [int(npadx),int(npadx)])
-
+    print("worker ", rank, 'line 223')
+    print("worker ", rank, ' end propagate_slice')
+    
     return fld_slice
 
 def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,           # dfl params
@@ -371,10 +380,10 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     recvbuf_imag  = np.zeros((count[rank],nx,ny))
     
     comm.Scatterv([np.ascontiguousarray(np.real(fld)), count*nx*ny, displ, MPI.DOUBLE], recvbuf_real, root=0)
-    #comm.Barrier()
+    comm.Barrier()
     
     comm.Scatterv([np.ascontiguousarray(np.imag(fld)), count*nx*ny, displ, MPI.DOUBLE], recvbuf_imag, root=0)
-    #comm.Barrier()
+    comm.Barrier()
     
     print('After Scatterv, process {} has real data shape :'.format(rank), recvbuf_real.shape)
     print('After Scatterv, process {} has imag data shape :'.format(rank), recvbuf_imag.shape)
@@ -384,7 +393,8 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # put together the real and imag data
     fld_block = recvbuf_real + 1j* recvbuf_imag 
     
-    
+    recvbuf_real = None
+    recvbuf_imag = None
     
     #---------------------------------------------------------------------------------------------------
     # propagate through cavity to return to undulator
@@ -393,8 +403,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # propagate slice by slice
     t0 = time.time()
     for k in range(fld_block.shape[0]):   
-        if k%100 == 0:
-            print("worker " + str(rank) + " finished "+str(np.round(k/fld_block.shape[0],2)*100) + " % of the job")
+        #if k%50 == 0:    
+            #print("worker " + str(rank) + " finished "+str(np.round(k/fld_block.shape[0],2)*100) + " % of the job")
+        
         # take the frequency slice
         fld_slice = np.squeeze(fld_block[k, :, :])
         
@@ -404,21 +415,24 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         R0H_slice = np.squeeze(R0H[ind0+k, :])
         lambd_slice = lambd[ind0+k]
         
+        print("worker ", rank, 'line 410')
+        
         # propagate the slice from und end to und start
         fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, verboseQ = False)
-        
+        print("worker ", rank, ' line 419')
         # record
         fld_block[k,:, :] = fld_slice
-    
+        print("worker ", rank, ' line 422')
     if rank < nprocs - 1:
-        print("slice #", count_sum[rank], " to slice #", count_sum[rank+1], " finished by worker " ,rank, ', took',time.time()-t0, 'seconds')
+        print('slice #', count_sum[rank], ' to slice #', count_sum[rank+1], ' finished by worker ' ,rank, ', took',time.time()-t0, 'seconds')
     else:
-        print("slice #", count_sum[rank], " to slice #", np.sum(count) + " finished by worker ", rank, ', took',time.time()-t0, 'seconds')
+        print('slice #', count_sum[rank], ' to slice #', np.sum(count),  ' finished by worker ', rank, ', took',time.time()-t0, 'seconds')
     
-        
+    print('worker ', rank, 'CPU usage ', psutil.cpu_percent(), '%')
+    print('worker ', rank, 'memory usage ', psutil.virtual_memory().percent, '%')
     comm.Barrier()
     
     #-------------------------------------------------------------------------------------------------
@@ -437,7 +451,11 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         recvbuf2_imag = None
     
     comm.Gatherv(sendbuf2_real, [recvbuf2_real, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    comm.Barrier()
     comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    comm.Barrier()
+    
+
     
     #-------------------------------------------------------------------------------------------------
     # inverse fft in time on the root node
@@ -492,8 +510,8 @@ if __name__ == '__main__':
     zsep = 200
     c_speed  = 299792458
     nslice = 1024
-    npadt = 2000
-    npadx = 500
+    npadt = 2048
+    npadx = 512
     showPlotQ = False
     savePlotQ = False
     verbosity = True
