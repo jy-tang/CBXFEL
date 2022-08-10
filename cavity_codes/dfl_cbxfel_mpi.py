@@ -6,6 +6,8 @@ import time
 import pickle
 from mpi4py import MPI
 import psutil
+import pickle
+from pathlib import Path
 
 def propagate_slice_kspace(field, z, xlamds, kx, ky):
     H = np.exp(-1j*xlamds*z*(kx**2 + ky**2)/(4*np.pi))
@@ -114,17 +116,13 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
                              R00_slice, R0H_slice,     # Bragg reflection information
                              l_cavity, l_undulator, w_cavity,  # cavity parameter
                              lambd_slice, kx_mesh, ky_mesh, xmesh, ymesh, #fld slice information
+                             roundtripQ,               # recirculation parameter
                              verboseQ): 
     
-    # propagate one slice from Und end to Und start
+    # propagate one slice around the cavity
     # take a slice in real space, unpadded, return a slice in real space, unpadded
-    #------------------------------------
-    # DEBUG
-    comm = MPI.COMM_WORLD
-    nprocs = comm.Get_size()
-    rank = comm.Get_rank()
-    print("worker ", rank, ' begin propagate_slice')
-    #------------------------------------------------
+    
+    
      # focal length of the lens
     flens1 = (l_cavity + w_cavity)/2
     flens2 = (l_cavity + w_cavity)/2
@@ -138,18 +136,21 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # pad in x
     if npadx > 0:
         fld_slice = pad_dfl_slice_x(fld_slice, [int(npadx),int(npadx)])
-    print("worker ", rank, 'line 141')
+   
     # fft to kx, ky space
     t0 = time.time()
     fld_slice = np.fft.fftshift(fft2(fld_slice), axes=(0,1))
     if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
-    print("worker ", rank, 'line 146')
+    
+    # if a roundtrip, propagate from UNDSTART to UNDEND
+    if roundtripQ:
+        fld_slice = propagate_slice_kspace(field = fld_slice, z = l_undulator, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
-    # drift from undulator to M1
+    # drift from UNDEND to M1
     Ldrift = l_cavity - z_und_end
         
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
-    print("worker ", rank, 'line 152')    
+
     
         
     # reflect from M1
@@ -171,7 +172,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
-    print("worker ", rank, 'line 174')    
+   
         
         
     # drift to M2
@@ -201,7 +202,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
-    print("worker ", rank, 'line 204')    
+  
     # drift to M4
     Ldrift = w_cavity/2
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
@@ -215,13 +216,12 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         
     # recirculation finished, ifft to real space
     fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-    print("worker ", rank, 'line 218')    
+   
         
     # unpad in x
     if npadx > 0:
         fld_slice = unpad_dfl_slice_x(fld_slice,  [int(npadx),int(npadx)])
-    print("worker ", rank, 'line 223')
-    print("worker ", rank, ' end propagate_slice')
+
     
     return fld_slice
 
@@ -229,7 +229,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                              npadt = 0, Dpadt = 0, npadx = 0,isradi = 1,       # padding params
                              l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                              showPlotQ = False, savePlotQ = False, verboseQ = 1, # plot params
-                             roundripQ = False, nRoundtrips = 0,               # recirculation params
+                             nRoundtrips = 0,                     # recirculation params
                              readfilename = None, writefilename = None):        # read and write
     
     t00 = time.time()
@@ -300,12 +300,15 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #-------------------------------------------------------------------------------------------
     # read or make field on root node
     #------------------------------------------------------------------------------------------- 
+    if readfilename == None:
+        saveFilenamePrefix = 'test'
+        workdir = '.'
+    else:
+        saveFilenamePrefix = readfilename
+        temp = readfilename.split('/')[:-1]
+        workdir = "/".join(temp)
+    
     if rank == 0:                    
-        if readfilename == None:
-            saveFilenamePrefix = 'test'
-        else:
-            saveFilenamePrefix = readfilename
-
         if readfilename == None:
             # make a new field
             t0 = time.time()
@@ -385,22 +388,30 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     comm.Scatterv([np.ascontiguousarray(np.imag(fld)), count*nx*ny, displ, MPI.DOUBLE], recvbuf_imag, root=0)
     comm.Barrier()
     
-    print('After Scatterv, process {} has real data shape :'.format(rank), recvbuf_real.shape)
-    print('After Scatterv, process {} has imag data shape :'.format(rank), recvbuf_imag.shape)
+    #print('After Scatterv, process {} has real data shape :'.format(rank), recvbuf_real.shape)
+    #print('After Scatterv, process {} has imag data shape :'.format(rank), recvbuf_imag.shape)
     
     comm.Barrier()
     
     # put together the real and imag data
     fld_block = recvbuf_real + 1j* recvbuf_imag 
     
+    
     recvbuf_real = None
     recvbuf_imag = None
     
+    
     #---------------------------------------------------------------------------------------------------
-    # propagate through cavity to return to undulator
-    # TODO: parallelize, roundtrip, angular error, wavefront distort
+    # propagate slice by slice 
+    # TODO: 
+    #    1. angular error, wavefront distort
+    #    2. delete plot function
+    #    3. add transmission
+    #    4. delete writing to disk for the last roundtrip
+    #    5. rotate the power peak to center 
     #---------------------------------------------------------------------------------------------------
-    # propagate slice by slice
+    
+    # first round from Undstart to Undend
     t0 = time.time()
     for k in range(fld_block.shape[0]):   
         #if k%50 == 0:    
@@ -415,24 +426,54 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         R0H_slice = np.squeeze(R0H[ind0+k, :])
         lambd_slice = lambd[ind0+k]
         
-        print("worker ", rank, 'line 410')
+       
         
         # propagate the slice from und end to und start
         fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
-                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, verboseQ = False)
-        print("worker ", rank, ' line 419')
-        # record
+                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
+                             roundtripQ = False, verboseQ = False)
+       
+        # record the current slice
         fld_block[k,:, :] = fld_slice
-        print("worker ", rank, ' line 422')
+    
+    pickle.dump(fld_block, open(saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) ) 
+    
+    #For additional roundtrips
+    for l in range(nRoundtrips):
+        for k in range(fld_block.shape[0]):
+            # take the frequency slice
+            fld_slice = np.squeeze(fld_block[k, :, :])
+        
+            # take the reflectivity and transmission slice
+            ind0 = count_sum[rank]
+            R00_slice = np.squeeze(R00[ind0+k, :])
+            R0H_slice = np.squeeze(R0H[ind0+k, :])
+            lambd_slice = lambd[ind0+k]
+        
+       
+        
+           # propagate the slice from und start to und start
+            fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+                             R00_slice = R00_slice, R0H_slice = R0H_slice,     
+                             l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
+                             lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
+                             roundtripQ = True, verboseQ = False)
+       
+            # record the current slice
+            fld_block[k,:, :] = fld_slice
+        
+        pickle.dump(fld_block, open(saveFilenamePrefix + "_block"+str(rank)+"_round"+str(l+1)+".p", "wb" ) ) 
+            
+        
+       
     if rank < nprocs - 1:
         print('slice #', count_sum[rank], ' to slice #', count_sum[rank+1], ' finished by worker ' ,rank, ', took',time.time()-t0, 'seconds')
     else:
         print('slice #', count_sum[rank], ' to slice #', np.sum(count),  ' finished by worker ', rank, ', took',time.time()-t0, 'seconds')
     
-    print('worker ', rank, 'CPU usage ', psutil.cpu_percent(), '%')
-    print('worker ', rank, 'memory usage ', psutil.virtual_memory().percent, '%')
+    
     comm.Barrier()
     
     #-------------------------------------------------------------------------------------------------
@@ -497,13 +538,44 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                 #writefilename = readfilename + 'r'
             write_dfl(fld, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
 
-        print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.')    
+        print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
+    
+    #-----------------------------------------------------------------------------------------
+    # merge files from each roundtrip
+    #-----------------------------------------------------------------------------------------
+    if nRoundtrips > 0:
+        t0 = time.time()
+        ave2, res2 = divmod(nRoundtrips + 1, nprocs)
+        count2 = [ave2 + 1 if p < res2 else ave2 for p in range(nprocs)]
+        count2 = np.array(count2)
+        count_sum2 = [sum(count2[:p]) for p in range(nprocs)]
+        if count2[rank] > 0:
+            if rank == 0:
+                Round_range = range(0, count_sum2[0])
+            else:
+                Round_range = range(count_sum2[rank-1], count_sum2[rank])
+            for Round in Round_range:
+                field_t = []
+                for block in range(nprocs):
+                    loadname = saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
+                    field_t.append(pickle.load( open(loadname , "rb" )))
+                field_t = np.concatenate(field_t, axis = 0)
+    
+                writefilename = saveFilenamePrefix+"_field_round" + str(Round)
+                write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+    
+    comm.Barrier()
+    if rank == 0:
+        for filename in Path(workdir).glob("*.p"):
+            filename.unlink()
+        print("It takes " + str(time.time()-t0) + "seconds to finish merging files")
+
             
     return fld 
         
         
 if __name__ == '__main__':
-    ncar = 128
+    ncar = 256
     dgrid = 400e-6
     w0 =40e-6
     xlamds = 1.261043e-10
@@ -520,7 +592,7 @@ if __name__ == '__main__':
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
                                  l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                                  showPlotQ = showPlotQ, savePlotQ = savePlotQ, verboseQ = 1, # plot params
-                                 roundripQ = False, nRoundtrips = 0,               # recirculation params
+                                 nRoundtrips = 10,               # recirculation params
                                  readfilename = None, writefilename = './test1.dfl')
     
     

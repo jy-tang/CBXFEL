@@ -12,60 +12,46 @@ import time
 import os
 #from get_memory import *
 
-if False:
-    try: # much faster to parallelize
-        #DISABLE_PYFFTW
-        # pyfftw is not without problems (especially when caching)
-        # https://stackoverflow.com/questions/6365623/improving-fft-performance-in-python https://gist.github.com/fnielsen/99b981b9da34ae3d5035
-        import pyfftw, multiprocessing
-        pyfftw.interfaces.cache.enable() # caching was working fine and giving 3x speedups
-        #pyfftw.interfaces.cache.disable() # but had to disable to fix some random corruption that randomly started
-        # manually plan ffts? https://stackoverflow.com/questions/55014239/how-to-do-100000-times-2d-fft-in-a-faster-way-using-python
-        threads = multiprocessing.cpu_count()
-        overwrite_input = True
-        #planner_effort = None
-        planner_effort = 'FFTW_ESTIMATE' # slightly suboptimal plan being used, but with a substantially quicker first-time planner step
-        #planner_effort = 'FFTW_MEASURE' # default?
-        def fft(array, axis=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.fft(array,axis=axis,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-        def fftn(array, axes=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.fftn(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-        def fft2(array, axes=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.fft2(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-        def ifft(array, axis=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.ifft(array,axis=axis,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-        def ifftn(array, axes=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.ifftn(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-        def ifft2(array, axes=None, overwrite_input=overwrite_input):
-            return pyfftw.interfaces.numpy_fft.ifft2(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
-    except:
-        print('WARNING: Could not load pyfftw for faster, parallelized ffts. (At command line, try: pip install pyfftw)')
-        def fft(array, axis=None):
-            return np.fft.fft(array,axis=axis)
-        def fftn(array, axes=None):
-            return np.fft.fftn(array,axes=axes)
-        def fft2(array, axes=None):
-            return np.fft.fft2(array,axes=axes)
-        def ifft(array, axis=None):
-            return np.fft.ifft(array,axis=axis)
-        def ifftn(array, axes=None):
-            return np.fft.ifftn(array,axes=axes)
-        def ifft2(array, axes=None):
-            return np.fft.ifft2(array,axes=axes)
 
-        
-def fft(array, axis=None):
-    return np.fft.fft(array,axis=axis)
-def fftn(array, axes=None):
-    return np.fft.fftn(array,axes=axes)
-def fft2(array, axes=None):
-    return np.fft.fft2(array,axes=axes)
-def ifft(array, axis=None):
-    return np.fft.ifft(array,axis=axis)
-def ifftn(array, axes=None):
-    return np.fft.ifftn(array,axes=axes)
-def ifft2(array, axes=None):
-    return np.fft.ifft2(array,axes=axes)
+if False: # much faster to parallelize
+    #DISABLE_PYFFTW
+    # pyfftw is not without problems (especially when caching)
+    # https://stackoverflow.com/questions/6365623/improving-fft-performance-in-python https://gist.github.com/fnielsen/99b981b9da34ae3d5035
+    import pyfftw, multiprocessing
+    #pyfftw.interfaces.cache.enable() # caching was working fine and giving 3x speedups
+    pyfftw.interfaces.cache.disable() # but had to disable to fix some random corruption that randomly started
+    # manually plan ffts? https://stackoverflow.com/questions/55014239/how-to-do-100000-times-2d-fft-in-a-faster-way-using-python
+    threads = multiprocessing.cpu_count()
+    overwrite_input = True
+    #planner_effort = None
+    planner_effort = 'FFTW_ESTIMATE' # slightly suboptimal plan being used, but with a substantially quicker first-time planner step
+    #planner_effort = 'FFTW_MEASURE' # default?
+    def fft(array, axis=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.fft(array,axis=axis,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+    def fftn(array, axes=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.fftn(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+    def fft2(array, axes=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.fft2(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+    def ifft(array, axis=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.ifft(array,axis=axis,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+    def ifftn(array, axes=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.ifftn(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+    def ifft2(array, axes=None, overwrite_input=overwrite_input):
+        return pyfftw.interfaces.numpy_fft.ifft2(array,axes=axes,threads=threads, planner_effort=planner_effort,overwrite_input=overwrite_input)
+else:
+    #print('WARNING: Could not load pyfftw for faster, parallelized ffts. (At command line, try: pip install pyfftw)')
+    def fft(array, axis=None):
+        return np.fft.fft(array,axis=axis)
+    def fftn(array, axes=None):
+        return np.fft.fftn(array,axes=axes)
+    def fft2(array, axes=None):
+        return np.fft.fft2(array,axes=axes)
+    def ifft(array, axis=None):
+        return np.fft.ifft(array,axis=axis)
+    def ifftn(array, axes=None):
+        return np.fft.ifftn(array,axes=axes)
+    def ifft2(array, axes=None):
+        return np.fft.ifft2(array,axes=axes)
 
 # change default plotting font size
 import matplotlib

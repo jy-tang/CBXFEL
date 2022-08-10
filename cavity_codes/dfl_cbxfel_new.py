@@ -133,7 +133,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # fft to kx, ky space
     t0 = time.time()
     fld_slice = np.fft.fftshift(fft2(fld_slice), axes=(0,1))
-    if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
+    #if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
     
         
     # drift from undulator to M1
@@ -331,7 +331,11 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
     #---------------------------------------------------------------------------------------------------
     # propagate slice by slice
     for k in range(nslice_padded):   
-        print('start to propagate slice ' + str(k))
+        
+        if k% 100 == 0:
+            print('finished ', np.round(k/nslice_padded,2)*100, '% of the slices')
+        
+        
         # take the frequency slice
         fld_slice = np.squeeze(fld[k, :, :])
         
@@ -342,7 +346,7 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
         # fft to kx, ky space
         t0 = time.time()
         fld_slice = np.fft.fftshift(fft2(fld_slice), axes=(0,1))
-        if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
+        #if verboseQ: print('took',time.time()-t0,'seconds for fft over x, y')
         
         # take the reflectivity and transmission slice
         R00_slice = np.squeeze(R00[k, :])
@@ -432,7 +436,7 @@ def recirculate_to_undulator(zsep, ncar, dgrid, xlamds=1.261043e-10,           #
     #--------------------------------------------------------------------------------------------------
     t0 = time.time()
     fld = ifft(np.fft.ifftshift(fld,axes = 0), axis=0)
-    if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
+    #if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
     
     #--------------------------------------------------------------------------------------------------
     # Dpadt in time
