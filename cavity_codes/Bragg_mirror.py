@@ -79,10 +79,10 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
         #R001 = R00-C;
         return R00
     
-def Bragg_mirror_reflection(photon_energies_eV, angles_rad, undo_slippageQ=0):
+def Bragg_mirror_reflection(photon_energies_eV, angles_rad, undo_slippageQ=1):
     return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippageQ=undo_slippageQ)
     
-def Bragg_mirror_transmission(photon_energies_eV, angles_rad, undo_slippageQ=0):
+def Bragg_mirror_transmission(photon_energies_eV, angles_rad, undo_slippageQ=1):
     return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=False, undo_slippageQ=undo_slippageQ)
     
 def plot_Bragg_mirror_response_slice(theta_slice=np.pi/4.):

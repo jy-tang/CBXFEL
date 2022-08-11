@@ -89,7 +89,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # reflect from M1
     fld_slice = np.einsum('i,ij->ij',R0H_slice,fld_slice)
     # trasmission through M1
-    #fld_slice = np.einsum('i,ij->ij',R00_slice,fld_slice)
+    fld_slice_transmit = np.einsum('i,ij->ij',R00_slice,fld_slice)
         
         
     # drift to the lens
@@ -154,9 +154,10 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # unpad in x
     if npadx > 0:
         fld_slice = unpad_dfl_slice_x(fld_slice,  [int(npadx),int(npadx)])
+        fld_slice_transmit = unpad_dfl_slice_x(fld_slice_transmit,  [int(npadx),int(npadx)])
 
     
-    return fld_slice
+    return fld_slice, fld_slice_transmit
 
 def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,           # dfl params
                              npadt = 0, Dpadt = 0, npadx = 0,isradi = 1,       # padding params
@@ -317,6 +318,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     
     # put together the real and imag data
     fld_block = recvbuf_real + 1j* recvbuf_imag 
+    fld_block_transmit = np.zeros(fld_block.shape, dtype = complex)
     
     
     recvbuf_real = None
@@ -328,9 +330,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # TODO: 
     #    1. angular error, wavefront distort
     # 
-    #    3. add transmission
     #    
-    #    5. rotate the power peak to center 
+    #    
+    #  
     #---------------------------------------------------------------------------------------------------
     
     # first round from Undstart to Undend
@@ -351,7 +353,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         
         # propagate the slice from und end to und start
-        fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+        fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
@@ -359,8 +361,10 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         # record the current slice
         fld_block[k,:, :] = fld_slice
+        fld_block_transmit[k, :, :] = fld_slice_transmit
     
-    pickle.dump(fld_block, open(saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) ) 
+    pickle.dump(fld_block, open(saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) )
+    pickle.dump(fld_block, open(saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round0.p", "wb" ) )
     
     #For additional roundtrips
     for l in range(nRoundtrips):
@@ -377,7 +381,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         
            # propagate the slice from und start to und start
-            fld_slice = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+            fld_slice, _ = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
@@ -402,21 +406,21 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # gather fld_blocks back to the root node
     #-------------------------------------------------------------------------------------------------
     
-    sendbuf2_real = np.ascontiguousarray(np.real(fld_block))
-    sendbuf2_imag = np.ascontiguousarray(np.imag(fld_block))
+    #sendbuf2_real = np.ascontiguousarray(np.real(fld_block))
+    #sendbuf2_imag = np.ascontiguousarray(np.imag(fld_block))
     
-    if rank ==0:
-        recvbuf2_real = np.zeros((nslice_padded, nx, ny))
-        recvbuf2_imag = np.zeros((nslice_padded, nx, ny))
+    #if rank ==0:
+        #recvbuf2_real = np.zeros((nslice_padded, nx, ny))
+        #recvbuf2_imag = np.zeros((nslice_padded, nx, ny))
 
-    else:
-        recvbuf2_real = None
-        recvbuf2_imag = None
+    #else:
+        #recvbuf2_real = None
+        #recvbuf2_imag = None
     
-    comm.Gatherv(sendbuf2_real, [recvbuf2_real, count*nx*ny, displ, MPI.DOUBLE], root=0)
-    comm.Barrier()
-    comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
-    comm.Barrier()
+    #comm.Gatherv(sendbuf2_real, [recvbuf2_real, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    #comm.Barrier()
+    #comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    #comm.Barrier()
     
 
     
@@ -424,25 +428,25 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # inverse fft in time on the root node
     #-------------------------------------------------------------------------------------------------
     
-    if rank == 0:
-        fld = recvbuf2_real + 1j* recvbuf2_imag
+    #if rank == 0:
+    #    fld = recvbuf2_real + 1j* recvbuf2_imag
 
         #----------------------
         # ifft to time domain
         #----------------------
-        t0 = time.time()
-        fld = ifft(np.fft.ifftshift(fld,axes = 0), axis=0)
-        if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
+    #    t0 = time.time()
+    #    fld = ifft(np.fft.ifftshift(fld,axes = 0), axis=0)
+    #    if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
 
         #----------------
         # Dpadt in time
         #----------------
-        if int(Dpadt) > 0:
+    #    if int(Dpadt) > 0:
 
-            fld = unpad_dfl_t(fld, [int(Dpadt), int(Dpadt)])
-            print("shape of fld after unpadding is ", fld.shape)
+    #        fld = unpad_dfl_t(fld, [int(Dpadt), int(Dpadt)])
+    #        print("shape of fld after unpadding is ", fld.shape)
 
-            if verboseQ: print('Removed padding of ',dt*int(npadt)*1e15,'fs in time from head and tail of field')
+   #         if verboseQ: print('Removed padding of ',dt*int(npadt)*1e15,'fs in time from head and tail of field')
 
 
 
@@ -451,18 +455,19 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         #-----------------------------------------
 
         # write field to disk
-        if writefilename != None:
-            print('Writing to',writefilename)
+   #     if writefilename != None:
+   #         print('Writing to',writefilename)
                 #writefilename = readfilename + 'r'
-            write_dfl(fld, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+   #         write_dfl(fld, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
 
-        print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
+   #     print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
     
     #-----------------------------------------------------------------------------------------
     # merge files from each roundtrip
     #-----------------------------------------------------------------------------------------
+    t0 = time.time()
+    # merge blocks of each roundtrip
     if nRoundtrips > 0:
-        t0 = time.time()
         ave2, res2 = divmod(nRoundtrips + 1, nprocs)
         count2 = [ave2 + 1 if p < res2 else ave2 for p in range(nprocs)]
         count2 = np.array(count2)
@@ -478,12 +483,35 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                     loadname = saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
                     field_t.append(pickle.load( open(loadname , "rb" )))
                 field_t = np.concatenate(field_t, axis = 0)
-    
+                
+                # fft in time and unpad
+                field_t = ifft(np.fft.ifftshift(field_t,axes = 0), axis=0)
+                if int(Dpadt) > 0:
+                    field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
+                
+                #write to disk
                 writefilename = saveFilenamePrefix+"_field_round" + str(Round)
                 write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
     
     comm.Barrier()
+
     if rank == 0:
+        #merge transmit block at round0
+        field_t = []
+        for block in range(nprocs):
+            loadname = saveFilenamePrefix + "_block_transmit_"+str(block)+"_round0"+".p"
+            field_t.append(pickle.load( open(loadname , "rb" )))
+        field_t = np.concatenate(field_t, axis = 0)
+        
+        # fft in time and unpad
+        field_t = ifft(np.fft.ifftshift(field_t,axes = 0), axis=0)
+        if int(Dpadt) > 0:
+            field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
+    
+        writefilename = saveFilenamePrefix+"_field_transmit_round0" 
+        write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+        
+        # delete block files
         for filename in Path(workdir).glob("*.p"):
             filename.unlink()
         print("It takes " + str(time.time()-t0) + "seconds to finish merging files")
@@ -493,7 +521,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         
         
 if __name__ == '__main__':
-    ncar = 256
+    ncar = 128
     dgrid = 400e-6
     w0 =40e-6
     xlamds = 1.261043e-10
@@ -501,7 +529,7 @@ if __name__ == '__main__':
     c_speed  = 299792458
     nslice = 1024
     npadt = 2048
-    npadx = 512
+    npadx = 128
     verbosity = True
     isradi = 1
     fld = recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
