@@ -14,7 +14,7 @@ def propagate_slice_kspace(field, z, xlamds, kx, ky):
     return field*H
 
 def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=0, 
-                         verboseQ = True, showPlotQ = False, xlim = None, ylim = None):
+                         verboseQ = True, xlim = None, ylim = None):
     t0 = time.time()
     
     h_Plank = 4.135667696e-15;      # Plank constant [eV-sec]
@@ -40,73 +40,6 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=0,
     R00 = Bragg_mirror_transmission(eph, theta).T
         
     if verboseQ: print('took',time.time()-t0,'seconds to calculate Bragg filter')
-
-
-    if showPlotQ:  # plot reflectivity and transmission
-        
-        # axes
-        pi = np.pi; ncontours = 100
-        thetaurad = 1e6*(theta-pi/4)
-        Eph,Thetaurad = np.meshgrid(eph,thetaurad);
-        
-        
-        # contour plots vs hw and kx
-        absR2 = np.abs(R0H.T)**2
-        absRT = np.abs(R00.T)**2
-        print('absR2.shape =',absR2.shape)
-        print('np.sum(np.isnan(absR2.reshape(-1))) =',np.sum(np.isnan(absR2.reshape(-1))))
-        print('np.sum(absR2.reshape(-1)>0) =',np.sum(absR2.reshape(-1)>0))
-        
-        
-        plt.figure(1)
-        plt.contourf(Eph,Thetaurad,absR2,ncontours, label='reflectivity')
-        #plt.contour(np.fft.fftshift(Eph),np.fft.fftshift(Thetaurad),absR2,3)
-        plt.ylabel('Angle - 45 deg (urad)')
-        plt.xlabel('Photon energy (eV)')
-        
-        if xlim:
-            plt.xlim(xlim)
-        if ylim:
-            plt.ylim(ylim)
-        
-        plt.colorbar()
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-        
-        plt.figure(2)
-        plt.contourf(Eph,Thetaurad,absRT,ncontours, label='reflectivity')
-        #plt.contour(np.fft.fftshift(Eph),np.fft.fftshift(Thetaurad),absR2,3)
-        plt.ylabel('Angle - 45 deg (urad)')
-        plt.xlabel('Photon energy (eV)')
-
-        
-        if xlim:
-            plt.xlim(xlim)
-        if ylim:
-            plt.ylim(ylim)
-        
-        plt.colorbar()
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-      
-        
-        # slice plot vs hw along kx=0
-        x, _  = Eph.shape
-        plt.figure(3)
-        plt.plot(Eph[x//2,:],np.abs(R0H.T[x//2, :])**2,label='reflectivity')
-        plt.plot(Eph[x//2, :],np.abs(R00.T[x//2, :])**2,label='transmission')
-        plt.title(['Angle = 45 deg'])
-        plt.xlabel('Photon energy (eV)')
-        if xlim: 
-            plt.xlim(xlim)
-        plt.ylim([0,1])
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-        #fwhm1 = half_max_x(Eph[cut], np.abs(R.T[cut])**2)
-        #print("FWHM is" + str(fwhm1) + 'eV')
         
     
     return R0H, R00
@@ -228,7 +161,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
 def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,           # dfl params
                              npadt = 0, Dpadt = 0, npadx = 0,isradi = 1,       # padding params
                              l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
-                             showPlotQ = False, savePlotQ = False, verboseQ = 1, # plot params
+                             verboseQ = 1,    # verbose params
                              nRoundtrips = 0,                     # recirculation params
                              readfilename = None, writefilename = None):        # read and write
     
@@ -294,7 +227,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #----------------------------    
 
     R0H, R00 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
-                             verboseQ = True, showPlotQ = showPlotQ, xlim = [9831,9833], ylim = [-10, 10])    
+                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10])    
     
     
     #-------------------------------------------------------------------------------------------
@@ -328,13 +261,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             fld = fld[::isradi,:,:]
             print("fld shape after downsample ", fld.shape)
 
-        if showPlotQ:
-            # plot the imported field
-            plot_fld_marginalize_t(fld, dgrid, dt=dt, saveFilename=saveFilenamePrefix+'_init_xy.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ) 
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-2, saveFilename=saveFilenamePrefix+'_init_tx.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-1, saveFilename=saveFilenamePrefix+'_init_ty.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
-            plot_fld_power(fld, dt=dt, saveFilename=saveFilenamePrefix+'_init_t.png',showPlotQ=showPlotQ, savePlotQ = savePlotQ)
-
+        
 
         energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt)
 
@@ -350,11 +277,6 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         #nslice_padded, nx, ny = fld.shape
         if verboseQ:
             print("after padding, fld shape " + str(fld.shape))
-        # plot the field after padding
-        if showPlotQ:
-            plot_fld_marginalize_t(fld, dgrid) 
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-2) 
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-1)
 
         # fft
         t0 = time.time()
@@ -405,9 +327,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # propagate slice by slice 
     # TODO: 
     #    1. angular error, wavefront distort
-    #    2. delete plot function
+    # 
     #    3. add transmission
-    #    4. delete writing to disk for the last roundtrip
+    #    
     #    5. rotate the power peak to center 
     #---------------------------------------------------------------------------------------------------
     
@@ -525,12 +447,8 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
 
 
         #-----------------------------------------   
-        # plot the final result and write results
+        #  write results
         #-----------------------------------------
-        if showPlotQ:
-            plot_fld_marginalize_t(fld, dgrid)
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-2)
-            plot_fld_slice(fld, dgrid, dt=dt, slice=-1)
 
         # write field to disk
         if writefilename != None:
@@ -584,14 +502,12 @@ if __name__ == '__main__':
     nslice = 1024
     npadt = 2048
     npadx = 512
-    showPlotQ = False
-    savePlotQ = False
     verbosity = True
     isradi = 1
     fld = recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
                                  l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
-                                 showPlotQ = showPlotQ, savePlotQ = savePlotQ, verboseQ = 1, # plot params
+                                  verboseQ = 1, # verbose params
                                  nRoundtrips = 10,               # recirculation params
                                  readfilename = None, writefilename = './test1.dfl')
     
