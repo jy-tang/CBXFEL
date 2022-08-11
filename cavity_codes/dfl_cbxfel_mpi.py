@@ -85,11 +85,12 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
 
     
+    # trasmission through M1
+    fld_slice_transmit = np.einsum('i,ij->ij',R00_slice,fld_slice)
         
     # reflect from M1
     fld_slice = np.einsum('i,ij->ij',R0H_slice,fld_slice)
-    # trasmission through M1
-    fld_slice_transmit = np.einsum('i,ij->ij',R00_slice,fld_slice)
+    
         
         
     # drift to the lens
@@ -149,6 +150,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         
     # recirculation finished, ifft to real space
     fld_slice = ifft2(np.fft.ifftshift(fld_slice))
+    fld_slice_transmit = ifft2(np.fft.ifftshift(fld_slice_transmit))
    
         
     # unpad in x
@@ -164,7 +166,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                              l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                              verboseQ = 1,    # verbose params
                              nRoundtrips = 0,                     # recirculation params
-                             readfilename = None, writefilename = None):        # read and write
+                             readfilename = None, workdir = None, saveFilenamePrefix = None):        # read and write
     
     t00 = time.time()
     
@@ -178,7 +180,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     
     dt = xlamds*zsep * max(1,isradi) /c_speed
     
-    nslice_padded = nslice + 2*int(npadt)
+    nslice_padded = nslice//max(1,isradi) + 2*int(npadt)
     nx = ny = ncar
     nx_padded = ncar + 2*int(npadx)
     
@@ -234,19 +236,18 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #-------------------------------------------------------------------------------------------
     # read or make field on root node
     #------------------------------------------------------------------------------------------- 
-    if readfilename == None:
-        saveFilenamePrefix = 'test'
+    if not workdir:
         workdir = '.'
-    else:
-        saveFilenamePrefix = readfilename
-        temp = readfilename.split('/')[:-1]
-        workdir = "/".join(temp)
+    
+    if not saveFilenamePrefix:
+        saveFilenamePrefix = 'test'
     
     if rank == 0:                    
         if readfilename == None:
             # make a new field
             t0 = time.time()
             fld = make_gaus_beam(ncar= ncar, dgrid=dgrid, w0=40e-6, dt=dt, nslice=nslice, trms=10.e-15)
+            fld *= np.sqrt(1e10/np.max(np.sum(np.abs(fld)**2, axis = (1,2))))
             print('took',time.time()-t0,'seconds total to make field with dimensions',fld.shape)
             fld = fld[::isradi,:,:]
             print("fld shape after downsample ", fld.shape)
@@ -364,7 +365,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         fld_block_transmit[k, :, :] = fld_slice_transmit
     
     pickle.dump(fld_block, open(saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) )
-    pickle.dump(fld_block, open(saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round0.p", "wb" ) )
+    pickle.dump(fld_block_transmit, open(saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round0.p", "wb" ) )
     
     #For additional roundtrips
     for l in range(nRoundtrips):
@@ -489,8 +490,12 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                 if int(Dpadt) > 0:
                     field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
                 
+                
+                energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
+                print("Round ", str(Round), " reflection")
+                
                 #write to disk
-                writefilename = saveFilenamePrefix+"_field_round" + str(Round)
+                writefilename = saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
                 write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
     
     comm.Barrier()
@@ -507,8 +512,11 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         field_t = ifft(np.fft.ifftshift(field_t,axes = 0), axis=0)
         if int(Dpadt) > 0:
             field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
+        
+        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
+        print("Round 0 transmission")
     
-        writefilename = saveFilenamePrefix+"_field_transmit_round0" 
+        writefilename = saveFilenamePrefix+"_field_transmit_round0" + '.dfl' 
         write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
         
         # delete block files
@@ -521,22 +529,24 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         
         
 if __name__ == '__main__':
-    ncar = 128
-    dgrid = 400e-6
+    ncar = 181
+    dgrid = 540e-6
     w0 =40e-6
     xlamds = 1.261043e-10
-    zsep = 200
+    zsep = 40
     c_speed  = 299792458
-    nslice = 1024
+    nslice = 6000
     npadt = 2048
     npadx = 128
     verbosity = True
-    isradi = 1
+    isradi = 6
+        
     fld = recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
                                  l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                                   verboseQ = 1, # verbose params
                                  nRoundtrips = 10,               # recirculation params
-                                 readfilename = None, writefilename = './test1.dfl')
+                                 readfilename ='/sdf/home/j/jytang/beamphysics/genesis/cavity_LCLSX/S2E/fromZhen/XAMP_0.24/tap0.04_K1.169_n100.out.dfl', 
+                                       workdir = '.', saveFilenamePrefix = 'n0')
     
     
