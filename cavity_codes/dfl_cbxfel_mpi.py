@@ -13,7 +13,7 @@ def propagate_slice_kspace(field, z, xlamds, kx, ky):
     H = np.exp(-1j*xlamds*z*(kx**2 + ky**2)/(4*np.pi))
     return field*H
 
-def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=0, 
+def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0], 
                          verboseQ = True, xlim = None, ylim = None):
     t0 = time.time()
     
@@ -31,7 +31,7 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=0,
     dx = 2. * dgrid / ncar
     Dkx = 2. * np.pi / dx
     Dtheta = Dkx * xlamds / 2. / np.pi
-    theta = theta_0 + Dtheta / 2. * np.linspace(-1.,1.,ncar+2*int(npadx))
+    theta = theta_0 + Dtheta / 2. * np.linspace(-1.,1.,ncar+int(npadx[0]) + int(npadx[1]))
     
 
    
@@ -67,8 +67,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
 
         
     # pad in x
-    if npadx > 0:
-        fld_slice = pad_dfl_slice_x(fld_slice, [int(npadx),int(npadx)])
+    if np.sum(npadx) > 0:
+        fld_slice = pad_dfl_slice_x(fld_slice, npadx)
    
     # fft to kx, ky space
     t0 = time.time()
@@ -154,15 +154,15 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
    
         
     # unpad in x
-    if npadx > 0:
-        fld_slice = unpad_dfl_slice_x(fld_slice,  [int(npadx),int(npadx)])
-        fld_slice_transmit = unpad_dfl_slice_x(fld_slice_transmit,  [int(npadx),int(npadx)])
+    if np.sum(npadx) > 0:
+        fld_slice = unpad_dfl_slice_x(fld_slice,  npadx)
+        fld_slice_transmit = unpad_dfl_slice_x(fld_slice_transmit,  npadx)
 
     
     return fld_slice, fld_slice_transmit
 
 def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,           # dfl params
-                             npadt = 0, Dpadt = 0, npadx = 0,isradi = 1,       # padding params
+                             npadt = 0, Dpadt = 0, npadx = [0,0],isradi = 1,       # padding params
                              l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                              verboseQ = 1,    # verbose params
                              nRoundtrips = 0,                     # recirculation params
@@ -182,7 +182,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     
     nslice_padded = nslice//max(1,isradi) + 2*int(npadt)
     nx = ny = ncar
-    nx_padded = ncar + 2*int(npadx)
+    nx_padded = ncar + int(npadx[0]) + int(npadx[1])
     
     
     #------------------------------
@@ -536,10 +536,12 @@ if __name__ == '__main__':
     zsep = 40
     c_speed  = 299792458
     nslice = 6000
-    npadt = 2048
-    npadx = 128
-    verbosity = True
     isradi = 6
+    npadt = (8192 - nslice//isradi)//2
+    npad1 = (1024-181)//2
+    npadx = [int(npad1), int(npad1) + 1]
+    verbosity = True
+    
         
     fld = recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
@@ -550,3 +552,4 @@ if __name__ == '__main__':
                                        workdir = '.', saveFilenamePrefix = 'n0')
     
     
+
