@@ -63,7 +63,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
     
-def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 40e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3 ):
+def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3 ):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -126,7 +126,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     #g.input['idmppar'] = 1 # dpa
    # g.input['xlamds'] = 1.76363e-09
     
-    g.input['delz'] = 2# set to 1 for ESASE
+    g.input['delz'] = 1# set to 1 for ESASE
     g.input['zsep'] = 80# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)

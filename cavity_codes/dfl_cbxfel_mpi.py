@@ -364,8 +364,8 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         fld_block[k,:, :] = fld_slice
         fld_block_transmit[k, :, :] = fld_slice_transmit
     
-    pickle.dump(fld_block, open(saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) )
-    pickle.dump(fld_block_transmit, open(saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round0.p", "wb" ) )
+    pickle.dump(fld_block, open(workdir + '/'+saveFilenamePrefix +"_block"+str(rank)+"_round0.p", "wb" ) )
+    pickle.dump(fld_block_transmit, open(workdir + '/'+saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round0.p", "wb" ) )
     
     #For additional roundtrips
     for l in range(nRoundtrips):
@@ -391,7 +391,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             # record the current slice
             fld_block[k,:, :] = fld_slice
         
-        pickle.dump(fld_block, open(saveFilenamePrefix + "_block"+str(rank)+"_round"+str(l+1)+".p", "wb" ) ) 
+        pickle.dump(fld_block, open(workdir + '/'+saveFilenamePrefix + "_block"+str(rank)+"_round"+str(l+1)+".p", "wb" ) ) 
             
         
        
@@ -481,7 +481,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             for Round in Round_range:
                 field_t = []
                 for block in range(nprocs):
-                    loadname = saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
+                    loadname = workdir + '/'+saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
                     field_t.append(pickle.load( open(loadname , "rb" )))
                 field_t = np.concatenate(field_t, axis = 0)
                 
@@ -495,7 +495,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                 print("Round ", str(Round), " reflection")
                 
                 #write to disk
-                writefilename = saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
+                writefilename = workdir + '/'+ saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
                 write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
     
     comm.Barrier()
@@ -504,7 +504,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         #merge transmit block at round0
         field_t = []
         for block in range(nprocs):
-            loadname = saveFilenamePrefix + "_block_transmit_"+str(block)+"_round0"+".p"
+            loadname = workdir + '/'+saveFilenamePrefix + "_block_transmit_"+str(block)+"_round0"+".p"
             field_t.append(pickle.load( open(loadname , "rb" )))
         field_t = np.concatenate(field_t, axis = 0)
         
@@ -516,7 +516,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
         print("Round 0 transmission")
     
-        writefilename = saveFilenamePrefix+"_field_transmit_round0" + '.dfl' 
+        writefilename =workdir + '/'+ saveFilenamePrefix+"_field_transmit_round0" + '.dfl' 
         write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
         
         # delete block files
@@ -524,32 +524,31 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             filename.unlink()
         print("It takes " + str(time.time()-t0) + "seconds to finish merging files")
 
-            
-    return fld 
+
         
         
-if __name__ == '__main__':
-    ncar = 181
-    dgrid = 540e-6
-    w0 =40e-6
-    xlamds = 1.261043e-10
-    zsep = 40
-    c_speed  = 299792458
-    nslice = 6000
-    isradi = 6
-    npadt = (8192 - nslice//isradi)//2
-    npad1 = (1024-181)//2
-    npadx = [int(npad1), int(npad1) + 1]
-    verbosity = True
+#if __name__ == '__main__':
+#    ncar = 181
+#    dgrid = 540e-6
+#    w0 =40e-6
+#    xlamds = 1.261043e-10
+#    zsep = 80
+#    c_speed  = 299792458
+#    nslice = 1780
+#    isradi = 2
+#    npadt = (8192 - nslice//isradi)//2
+#    npad1 = (1024-ncar)//2
+#    npadx = [int(npad1), int(npad1) + 1]
+#    verbosity = True
     
         
-    fld = recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
-                                 npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
-                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
-                                  verboseQ = 1, # verbose params
-                                 nRoundtrips = 10,               # recirculation params
-                                 readfilename ='/sdf/home/j/jytang/beamphysics/genesis/cavity_LCLSX/S2E/fromZhen/XAMP_0.24/tap0.04_K1.169_n100.out.dfl', 
-                                       workdir = '.', saveFilenamePrefix = 'n0')
+#    recirculate_to_undulator_mpi(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.261043e-10,           # dfl params
+#                                 npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
+#                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
+#                                  verboseQ = 1, # verbose params
+#                                 nRoundtrips = 10,               # recirculation params
+#                                 readfilename ='/sdf/home/j/jytang/beamphysics/genesis/CBXFEL/data_long/tap0.03_K1.172_nt28_nf4.out.dfl', 
+#                                       workdir = '/sdf/home/j/jytang/beamphysics/genesis/CBXFEL/data_long/', saveFilenamePrefix = 'n0')
     
     
 
