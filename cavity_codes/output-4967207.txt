@@ -1,0 +1,298 @@
+Input data split into vectors of sizes [64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64
+ 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64
+ 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64
+ 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64
+ 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64 64
+ 64 64 64 64 64 64 64 64]
+Input data split with displacements of [0, 2096704, 4193408, 6290112, 8386816, 10483520, 12580224, 14676928, 16773632, 18870336, 20967040, 23063744, 25160448, 27257152, 29353856, 31450560, 33547264, 35643968, 37740672, 39837376, 41934080, 44030784, 46127488, 48224192, 50320896, 52417600, 54514304, 56611008, 58707712, 60804416, 62901120, 64997824, 67094528, 69191232, 71287936, 73384640, 75481344, 77578048, 79674752, 81771456, 83868160, 85964864, 88061568, 90158272, 92254976, 94351680, 96448384, 98545088, 100641792, 102738496, 104835200, 106931904, 109028608, 111125312, 113222016, 115318720, 117415424, 119512128, 121608832, 123705536, 125802240, 127898944, 129995648, 132092352, 134189056, 136285760, 138382464, 140479168, 142575872, 144672576, 146769280, 148865984, 150962688, 153059392, 155156096, 157252800, 159349504, 161446208, 163542912, 165639616, 167736320, 169833024, 171929728, 174026432, 176123136, 178219840, 180316544, 182413248, 184509952, 186606656, 188703360, 190800064, 192896768, 194993472, 197090176, 199186880, 201283584, 203380288, 205476992, 207573696, 209670400, 211767104, 213863808, 215960512, 218057216, 220153920, 222250624, 224347328, 226444032, 228540736, 230637440, 232734144, 234830848, 236927552, 239024256, 241120960, 243217664, 245314368, 247411072, 249507776, 251604480, 253701184, 255797888, 257894592, 259991296, 262088000, 264184704, 266281408]
+Input data split with displacements in row of [0, 64, 128, 192, 256, 320, 384, 448, 512, 576, 640, 704, 768, 832, 896, 960, 1024, 1088, 1152, 1216, 1280, 1344, 1408, 1472, 1536, 1600, 1664, 1728, 1792, 1856, 1920, 1984, 2048, 2112, 2176, 2240, 2304, 2368, 2432, 2496, 2560, 2624, 2688, 2752, 2816, 2880, 2944, 3008, 3072, 3136, 3200, 3264, 3328, 3392, 3456, 3520, 3584, 3648, 3712, 3776, 3840, 3904, 3968, 4032, 4096, 4160, 4224, 4288, 4352, 4416, 4480, 4544, 4608, 4672, 4736, 4800, 4864, 4928, 4992, 5056, 5120, 5184, 5248, 5312, 5376, 5440, 5504, 5568, 5632, 5696, 5760, 5824, 5888, 5952, 6016, 6080, 6144, 6208, 6272, 6336, 6400, 6464, 6528, 6592, 6656, 6720, 6784, 6848, 6912, 6976, 7040, 7104, 7168, 7232, 7296, 7360, 7424, 7488, 7552, 7616, 7680, 7744, 7808, 7872, 7936, 8000, 8064, 8128]
+took 10.045594453811646 seconds to calculate Bragg filter
+took 10.518009185791016 seconds to calculate Bragg filter
+took 10.522180318832397 seconds to calculate Bragg filter
+took 10.524280071258545 seconds to calculate Bragg filter
+took 10.530124425888062 seconds to calculate Bragg filter
+took 12.361852407455444 seconds to calculate Bragg filter
+took 12.36391544342041 seconds to calculate Bragg filter
+took 12.365833520889282 seconds to calculate Bragg filter
+took 12.511442422866821 seconds to calculate Bragg filter
+took 12.804624795913696 seconds to calculate Bragg filter
+took 13.075661420822144 seconds to calculate Bragg filter
+took 13.0773606300354 seconds to calculate Bragg filter
+took 14.483947038650513 seconds to calculate Bragg filter
+took 14.533735990524292 seconds to calculate Bragg filter
+took 14.649825811386108 seconds to calculate Bragg filter
+took 14.778342723846436 seconds to calculate Bragg filter
+took 14.907273530960083 seconds to calculate Bragg filter
+took 14.929864168167114 seconds to calculate Bragg filter
+took 15.045726776123047 seconds to calculate Bragg filter
+took 15.236588716506958 seconds to calculate Bragg filter
+took 15.282422542572021 seconds to calculate Bragg filter
+took 15.410940647125244 seconds to calculate Bragg filter
+took 15.438854217529297 seconds to calculate Bragg filter
+took 15.49141550064087 seconds to calculate Bragg filter
+took 15.579457521438599 seconds to calculate Bragg filter
+took 15.579533338546753 seconds to calculate Bragg filter
+took 15.639234066009521 seconds to calculate Bragg filter
+took 15.63887095451355 seconds to calculate Bragg filter
+took 15.75410270690918 seconds to calculate Bragg filter
+took 15.755341291427612 seconds to calculate Bragg filter
+took 15.824821949005127 seconds to calculate Bragg filter
+took 15.836281776428223 seconds to calculate Bragg filter
+took 15.955225706100464 seconds to calculate Bragg filter
+took 16.092795372009277 seconds to calculate Bragg filter
+took 16.092894554138184 seconds to calculate Bragg filter
+took 16.131290674209595 seconds to calculate Bragg filter
+took 16.235008478164673 seconds to calculate Bragg filter
+took 16.238404989242554 seconds to calculate Bragg filter
+took 17.12782883644104 seconds to calculate Bragg filter
+took 17.906265020370483 seconds to calculate Bragg filter
+took 17.929335832595825 seconds to calculate Bragg filter
+took 17.93563413619995 seconds to calculate Bragg filter
+took 18.346023321151733 seconds to calculate Bragg filter
+took 18.559813022613525 seconds to calculate Bragg filter
+took 18.559725761413574 seconds to calculate Bragg filter
+took 18.610785961151123 seconds to calculate Bragg filter
+took 18.61066222190857 seconds to calculate Bragg filter
+took 18.611427068710327 seconds to calculate Bragg filter
+took 19.241872549057007 seconds to calculate Bragg filter
+took 19.345686435699463 seconds to calculate Bragg filter
+took 19.46454381942749 seconds to calculate Bragg filter
+took 19.804707765579224 seconds to calculate Bragg filter
+took 19.859748363494873 seconds to calculate Bragg filter
+took 19.899813652038574 seconds to calculate Bragg filter
+took 19.90109395980835 seconds to calculate Bragg filter
+took 19.91201615333557 seconds to calculate Bragg filter
+took 20.01923632621765 seconds to calculate Bragg filter
+took 20.01659893989563 seconds to calculate Bragg filter
+took 20.02694582939148 seconds to calculate Bragg filter
+took 20.020251750946045 seconds to calculate Bragg filter
+took 20.193724393844604 seconds to calculate Bragg filter
+took 20.274182558059692 seconds to calculate Bragg filter
+took 20.379621982574463 seconds to calculate Bragg filter
+took 20.555983304977417 seconds to calculate Bragg filter
+took 20.57606530189514 seconds to calculate Bragg filter
+took 20.575488805770874 seconds to calculate Bragg filter
+took 20.60341453552246 seconds to calculate Bragg filter
+took 20.747206211090088 seconds to calculate Bragg filter
+took 20.846503257751465 seconds to calculate Bragg filter
+took 21.014825105667114 seconds to calculate Bragg filter
+took 21.02969193458557 seconds to calculate Bragg filter
+took 21.033368349075317 seconds to calculate Bragg filter
+took 21.036186933517456 seconds to calculate Bragg filter
+took 21.09945511817932 seconds to calculate Bragg filter
+took 21.106494903564453 seconds to calculate Bragg filter
+took 21.201108932495117 seconds to calculate Bragg filter
+took 21.227386951446533 seconds to calculate Bragg filter
+took 21.260730266571045 seconds to calculate Bragg filter
+took 21.291679620742798 seconds to calculate Bragg filter
+took 21.2964084148407 seconds to calculate Bragg filter
+took 21.34118962287903 seconds to calculate Bragg filter
+took 21.36077356338501 seconds to calculate Bragg filter
+took 21.558730840682983 seconds to calculate Bragg filter
+took 21.61119031906128 seconds to calculate Bragg filter
+took 21.609256505966187 seconds to calculate Bragg filter
+took 21.651177644729614 seconds to calculate Bragg filter
+took 21.667433500289917 seconds to calculate Bragg filter
+took 21.668139457702637 seconds to calculate Bragg filter
+took 21.774003267288208 seconds to calculate Bragg filter
+took 21.786709547042847 seconds to calculate Bragg filter
+took 21.874974966049194 seconds to calculate Bragg filter
+took 22.007867336273193 seconds to calculate Bragg filter
+took 22.005707502365112 seconds to calculate Bragg filter
+took 22.01631808280945 seconds to calculate Bragg filter
+took 22.045473337173462 seconds to calculate Bragg filter
+took 22.142776489257812 seconds to calculate Bragg filter
+took 22.14961886405945 seconds to calculate Bragg filter
+took 22.215501308441162 seconds to calculate Bragg filter
+took 22.318053007125854 seconds to calculate Bragg filter
+took 22.36526131629944 seconds to calculate Bragg filter
+took 22.366196632385254 seconds to calculate Bragg filter
+took 22.409916877746582 seconds to calculate Bragg filter
+took 22.415043354034424 seconds to calculate Bragg filter
+took 22.557780265808105 seconds to calculate Bragg filter
+took 22.581409692764282 seconds to calculate Bragg filter
+took 22.576074361801147 seconds to calculate Bragg filter
+took 22.667685508728027 seconds to calculate Bragg filter
+took 22.667819499969482 seconds to calculate Bragg filter
+took 22.670122861862183 seconds to calculate Bragg filter
+took 22.728009939193726 seconds to calculate Bragg filter
+took 22.83205819129944 seconds to calculate Bragg filter
+took 22.843989849090576 seconds to calculate Bragg filter
+took 22.87949228286743 seconds to calculate Bragg filter
+took 23.056198120117188 seconds to calculate Bragg filter
+took 23.057965517044067 seconds to calculate Bragg filter
+took 23.066728115081787 seconds to calculate Bragg filter
+took 23.0637264251709 seconds to calculate Bragg filter
+took 23.178640365600586 seconds to calculate Bragg filter
+took 23.247128009796143 seconds to calculate Bragg filter
+took 23.250309705734253 seconds to calculate Bragg filter
+took 23.30802607536316 seconds to calculate Bragg filter
+took 23.316025733947754 seconds to calculate Bragg filter
+took 23.31848382949829 seconds to calculate Bragg filter
+took 23.31816005706787 seconds to calculate Bragg filter
+took 23.34860062599182 seconds to calculate Bragg filter
+took 23.353373527526855 seconds to calculate Bragg filter
+Reading in /sdf/home/j/jytang/beamphysics/genesis/CBXFEL/data_long/tap0.03_K1.172_nt28_nf4.out.dfl
+took 23.35495376586914 seconds to calculate Bragg filter
+took 23.353668212890625 seconds to calculate Bragg filter
+0.9122200012207031 seconds to read in fld array (60345762,)
+read 1842 slices
+1.0967254638671875e-05 seconds to reshape fld array (1842, 181, 181)
+took 0.9123811721801758 seconds total to read in and format the field with dimensions (1842, 181, 181)
+fld shape after truncation  (1780, 181, 181)
+fld shape after downsample  (890, 181, 181)
+energy = 2802.047987uJ, peakpower = 131.875678GW, trms = 8.062593fs, tfwhm = 21.3052fs, xrms = 42.653848um, xfwhm = 47.049122um, yrms = 42.653848um, yfwhm = 46.727958um, 
+Padded field in time by 3651 slices ( 245.72028389053077 fs) at head and tail
+after padding, fld shape (8192, 181, 181)
+took 5.096155643463135 seconds for fft over t
+slice # 4544  to slice # 4608  finished by worker  71 , took 166.81491875648499 seconds
+slice # 4032  to slice # 4096  finished by worker  63 , took 167.98702311515808 seconds
+slice # 5056  to slice # 5120  finished by worker  79 , took 168.1213550567627 seconds
+slice # 5312  to slice # 5376  finished by worker  83 , took 168.46404552459717 seconds
+slice # 4800  to slice # 4864  finished by worker  75 , took 168.4973680973053 seconds
+slice # 6080  to slice # 6144  finished by worker  95 , took 169.19022393226624 seconds
+slice # 5568  to slice # 5632  finished by worker  87 , took 173.34097576141357 seconds
+slice # 4288  to slice # 4352  finished by worker  67 , took 173.8215217590332 seconds
+slice # 7808  to slice # 7872  finished by worker  122 , took 180.4108419418335 seconds
+slice # 6976  to slice # 7040  finished by worker  109 , took 180.5951874256134 seconds
+slice # 4416  to slice # 4480  finished by worker  69 , took 181.31992888450623 seconds
+slice # 4160  to slice # 4224  finished by worker  65 , took 181.36835527420044 seconds
+slice # 5696  to slice # 5760  finished by worker  89 , took 181.64339137077332 seconds
+slice # 5440  to slice # 5504  finished by worker  85 , took 181.6532862186432 seconds
+slice # 5824  to slice # 5888  finished by worker  91 , took 181.9555642604828 seconds
+slice # 4672  to slice # 4736  finished by worker  73 , took 182.7614345550537 seconds
+slice # 5184  to slice # 5248  finished by worker  81 , took 183.33451795578003 seconds
+slice # 4928  to slice # 4992  finished by worker  77 , took 183.50580739974976 seconds
+slice # 7616  to slice # 7680  finished by worker  119 , took 184.0515468120575 seconds
+slice # 7296  to slice # 7360  finished by worker  114 , took 184.44097232818604 seconds
+slice # 8128  to slice # 8192  finished by worker  127 , took 184.80809712409973 seconds
+slice # 6912  to slice # 6976  finished by worker  108 , took 185.73590350151062 seconds
+slice # 7872  to slice # 7936  finished by worker  123 , took 186.17471718788147 seconds
+slice # 7936  to slice # 8000  finished by worker  124 , took 186.24820184707642 seconds
+slice # 7040  to slice # 7104  finished by worker  110 , took 186.48580121994019 seconds
+slice # 7104  to slice # 7168  finished by worker  111 , took 186.88872075080872 seconds
+slice # 7424  to slice # 7488  finished by worker  116 , took 186.92500805854797 seconds
+slice # 7168  to slice # 7232  finished by worker  112 , took 187.11136865615845 seconds
+slice # 7744  to slice # 7808  finished by worker  121 , took 187.1855137348175 seconds
+slice # 7680  to slice # 7744  finished by worker  120 , took 187.2000961303711 seconds
+slice # 7488  to slice # 7552  finished by worker  117 , took 187.31544137001038 seconds
+slice # 7552  to slice # 7616  finished by worker  118 , took 187.44821572303772 seconds
+slice # 7232  to slice # 7296  finished by worker  113 , took 187.52662062644958 seconds
+slice # 8064  to slice # 8128  finished by worker  126 , took 187.5641748905182 seconds
+slice # 7360  to slice # 7424  finished by worker  115 , took 188.099458694458 seconds
+slice # 8000  to slice # 8064  finished by worker  125 , took 188.5343098640442 seconds
+slice # 6272  to slice # 6336  finished by worker  98 , took 196.33208537101746 seconds
+slice # 5504  to slice # 5568  finished by worker  86 , took 197.3470721244812 seconds
+slice # 6016  to slice # 6080  finished by worker  94 , took 198.1999683380127 seconds
+slice # 5248  to slice # 5312  finished by worker  82 , took 198.97821617126465 seconds
+slice # 4224  to slice # 4288  finished by worker  66 , took 199.15400671958923 seconds
+slice # 6720  to slice # 6784  finished by worker  105 , took 199.20770907402039 seconds
+slice # 4992  to slice # 5056  finished by worker  78 , took 199.7632565498352 seconds
+slice # 4480  to slice # 4544  finished by worker  70 , took 199.76875233650208 seconds
+slice # 2112  to slice # 2176  finished by worker  33 , took 200.11956906318665 seconds
+slice # 6784  to slice # 6848  finished by worker  106 , took 200.24884033203125 seconds
+slice # 3968  to slice # 4032  finished by worker  62 , took 200.34550952911377 seconds
+slice # 4736  to slice # 4800  finished by worker  74 , took 200.3814127445221 seconds
+slice # 5760  to slice # 5824  finished by worker  90 , took 200.46781826019287 seconds
+slice # 6528  to slice # 6592  finished by worker  102 , took 200.56045532226562 seconds
+slice # 1728  to slice # 1792  finished by worker  27 , took 201.48382878303528 seconds
+slice # 3264  to slice # 3328  finished by worker  51 , took 201.52116990089417 seconds
+slice # 6848  to slice # 6912  finished by worker  107 , took 201.69359397888184 seconds
+slice # 576  to slice # 640  finished by worker  9 , took 201.86125683784485 seconds
+slice # 1472  to slice # 1536  finished by worker  23 , took 202.50904631614685 seconds
+slice # 3136  to slice # 3200  finished by worker  49 , took 202.57520484924316 seconds
+slice # 1984  to slice # 2048  finished by worker  31 , took 203.0571482181549 seconds
+slice # 448  to slice # 512  finished by worker  7 , took 203.41355299949646 seconds
+slice # 64  to slice # 128  finished by worker  1 , took 203.46650171279907 seconds
+slice # 1600  to slice # 1664  finished by worker  25 , took 203.57469201087952 seconds
+slice # 2624  to slice # 2688  finished by worker  41 , took 203.71730303764343 seconds
+slice # 1088  to slice # 1152  finished by worker  17 , took 204.03835129737854 seconds
+slice # 3776  to slice # 3840  finished by worker  59 , took 204.05158853530884 seconds
+slice # 1856  to slice # 1920  finished by worker  29 , took 204.18952989578247 seconds
+slice # 2496  to slice # 2560  finished by worker  39 , took 204.28365302085876 seconds
+slice # 1344  to slice # 1408  finished by worker  21 , took 204.2979474067688 seconds
+slice # 1216  to slice # 1280  finished by worker  19 , took 204.31548523902893 seconds
+slice # 192  to slice # 256  finished by worker  3 , took 204.3334949016571 seconds
+slice # 832  to slice # 896  finished by worker  13 , took 204.33752179145813 seconds
+slice # 3392  to slice # 3456  finished by worker  53 , took 204.349458694458 seconds
+slice # 960  to slice # 1024  finished by worker  15 , took 204.35961318016052 seconds
+slice # 2880  to slice # 2944  finished by worker  45 , took 204.43111324310303 seconds
+slice # 6336  to slice # 6400  finished by worker  99 , took 204.58869791030884 seconds
+slice # 704  to slice # 768  finished by worker  11 , took 204.6501190662384 seconds
+slice # 3008  to slice # 3072  finished by worker  47 , took 204.6576316356659 seconds
+slice # 3520  to slice # 3584  finished by worker  55 , took 204.76877617835999 seconds
+slice # 2752  to slice # 2816  finished by worker  43 , took 204.95165944099426 seconds
+slice # 320  to slice # 384  finished by worker  5 , took 204.9942820072174 seconds
+slice # 2368  to slice # 2432  finished by worker  37 , took 205.0361189842224 seconds
+slice # 4608  to slice # 4672  finished by worker  72 , took 205.25671768188477 seconds
+slice # 2240  to slice # 2304  finished by worker  35 , took 205.371258020401 seconds
+slice # 3648  to slice # 3712  finished by worker  57 , took 205.42665839195251 seconds
+slice # 5376  to slice # 5440  finished by worker  84 , took 205.52770495414734 seconds
+slice # 6656  to slice # 6720  finished by worker  104 , took 205.57497477531433 seconds
+slice # 6592  to slice # 6656  finished by worker  103 , took 205.5839340686798 seconds
+slice # 4864  to slice # 4928  finished by worker  76 , took 205.58652329444885 seconds
+slice # 6144  to slice # 6208  finished by worker  96 , took 205.62118482589722 seconds
+slice # 6208  to slice # 6272  finished by worker  97 , took 205.62566709518433 seconds
+slice # 6400  to slice # 6464  finished by worker  100 , took 205.67811560630798 seconds
+slice # 5120  to slice # 5184  finished by worker  80 , took 205.6969130039215 seconds
+slice # 6464  to slice # 6528  finished by worker  101 , took 205.79286861419678 seconds
+slice # 4096  to slice # 4160  finished by worker  64 , took 205.86141419410706 seconds
+slice # 5952  to slice # 6016  finished by worker  93 , took 205.86530661582947 seconds
+slice # 4352  to slice # 4416  finished by worker  68 , took 205.89435863494873 seconds
+slice # 5888  to slice # 5952  finished by worker  92 , took 205.9680371284485 seconds
+slice # 5632  to slice # 5696  finished by worker  88 , took 206.15151381492615 seconds
+slice # 2944  to slice # 3008  finished by worker  46 , took 208.1383912563324 seconds
+slice # 3904  to slice # 3968  finished by worker  61 , took 208.68408489227295 seconds
+slice # 3456  to slice # 3520  finished by worker  54 , took 208.9242024421692 seconds
+slice # 128  to slice # 192  finished by worker  2 , took 208.97763419151306 seconds
+slice # 3328  to slice # 3392  finished by worker  52 , took 208.99472498893738 seconds
+slice # 1664  to slice # 1728  finished by worker  26 , took 209.0245361328125 seconds
+slice # 1920  to slice # 1984  finished by worker  30 , took 209.18872117996216 seconds
+slice # 2688  to slice # 2752  finished by worker  42 , took 209.25227046012878 seconds
+slice # 1152  to slice # 1216  finished by worker  18 , took 209.27348685264587 seconds
+slice # 1408  to slice # 1472  finished by worker  22 , took 209.3654670715332 seconds
+slice # 1024  to slice # 1088  finished by worker  16 , took 209.37623023986816 seconds
+slice # 384  to slice # 448  finished by worker  6 , took 209.4766023159027 seconds
+slice # 3712  to slice # 3776  finished by worker  58 , took 209.52830028533936 seconds
+slice # 1792  to slice # 1856  finished by worker  28 , took 209.5591561794281 seconds
+slice # 3200  to slice # 3264  finished by worker  50 , took 209.57403826713562 seconds
+slice # 2560  to slice # 2624  finished by worker  40 , took 209.60676050186157 seconds
+slice # 256  to slice # 320  finished by worker  4 , took 209.6020143032074 seconds
+slice # 2304  to slice # 2368  finished by worker  36 , took 209.6467525959015 seconds
+slice # 3584  to slice # 3648  finished by worker  56 , took 209.64719772338867 seconds
+slice # 2432  to slice # 2496  finished by worker  38 , took 209.65333557128906 seconds
+slice # 768  to slice # 832  finished by worker  12 , took 209.806640625 seconds
+slice # 3840  to slice # 3904  finished by worker  60 , took 209.83258891105652 seconds
+slice # 640  to slice # 704  finished by worker  10 , took 209.83042097091675 seconds
+slice # 2176  to slice # 2240  finished by worker  34 , took 209.86453199386597 seconds
+slice # 3072  to slice # 3136  finished by worker  48 , took 209.9530873298645 seconds
+slice # 896  to slice # 960  finished by worker  14 , took 210.02858781814575 seconds
+slice # 1280  to slice # 1344  finished by worker  20 , took 210.09107851982117 seconds
+slice # 0  to slice # 64  finished by worker  0 , took 210.08059692382812 seconds
+slice # 512  to slice # 576  finished by worker  8 , took 210.2306158542633 seconds
+slice # 2048  to slice # 2112  finished by worker  32 , took 210.42034530639648 seconds
+slice # 2816  to slice # 2880  finished by worker  44 , took 210.45793914794922 seconds
+slice # 1536  to slice # 1600  finished by worker  24 , took 210.73657989501953 seconds
+energy = 114.440583uJ, peakpower = 0.993253GW, trms = 94.345906fs, tfwhm = 70.821885fs, xrms = 56.039759um, xfwhm = 78.205425um, yrms = 56.039759um, yfwhm = 43.639656um, 
+energy = 181.381911uJ, peakpower = 2.873785GW, trms = 54.10422fs, tfwhm = 52.310151fs, xrms = 85.115587um, xfwhm = 114.00051um, yrms = 85.115587um, yfwhm = 108.282798um, 
+energy = 123.264669uJ, peakpower = 1.212379GW, trms = 88.860548fs, tfwhm = 70.661736fs, xrms = 57.934641um, xfwhm = 76.523973um, yrms = 57.934641um, yfwhm = 39.258537um, 
+energy = 143.400856uJ, peakpower = 1.557773GW, trms = 72.551024fs, tfwhm = 69.337693fs, xrms = 65.11065um, xfwhm = 87.476762um, yrms = 65.11065um, yfwhm = 92.362232um, 
+energy = 134.807634uJ, peakpower = 1.32365GW, trms = 80.335289fs, tfwhm = 75.739105fs, xrms = 60.965838um, xfwhm = 79.468063um, yrms = 60.965838um, yfwhm = 75.301689um, 
+energy = 118.726419uJ, peakpower = 1.128918GW, trms = 91.259636fs, tfwhm = 69.267912fs, xrms = 56.80525um, xfwhm = 77.309879um, yrms = 56.80525um, yfwhm = 47.50477um, 
+energy = 106.998906uJ, peakpower = 0.69564GW, trms = 104.216571fs, tfwhm = 85.990594fs, xrms = 54.898785um, xfwhm = 80.838655um, yrms = 54.898785um, yfwhm = 57.942829um, 
+energy = 128.782364uJ, peakpower = 1.257385GW, trms = 86.104391fs, tfwhm = 74.004056fs, xrms = 59.481901um, xfwhm = 77.323345um, yrms = 59.481901um, yfwhm = 54.205577um, 
+energy = 153.612637uJ, peakpower = 2.029109GW, trms = 59.43462fs, tfwhm = 60.101743fs, xrms = 67.310793um, xfwhm = 92.844996um, yrms = 67.310793um, yfwhm = 107.339187um, 
+Round  7  reflection
+Round  3  reflection
+Round  6  reflection
+Round  2  reflection
+Round  0  reflection
+Round  9  reflection
+energy = 110.640152uJ, peakpower = 0.841394GW, trms = 98.486413fs, tfwhm = 75.738322fs, xrms = 55.357254um, xfwhm = 79.257265um, yrms = 55.357254um, yfwhm = 54.83135um, 
+Round  5  reflection
+Round  4  reflection
+Round  1  reflection
+Round  8  reflection
+energy = 2255.129645uJ, peakpower = 85.754414GW, trms = 28.832146fs, tfwhm = 17.11386fs, xrms = 50.54384um, xfwhm = 68.787591um, yrms = 50.54384um, yfwhm = 67.923657um, 
+Round 0 transmission
+It takes 110.03054165840149seconds to finish merging files

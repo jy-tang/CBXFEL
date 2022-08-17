@@ -1,0 +1,235 @@
+
+ $newrun
+
+ aw0   =  1.725341
+
+ xkx   =  0.000000D+00
+
+ xky   =  1.000000D+00
+
+ wcoefz=  0.000000D+00   0.00000D-03   1.000000D+00
+
+ xlamd =  0.026
+
+ fbess0=  0.000000D+00
+
+ delaw =  0.000000D+00
+
+ iertyp=    0
+
+ iwityp=    0
+
+ awd   =  2.474900D+00
+
+ awx   =  0.000000D+00
+
+ awy   =  0.000000D+00
+
+ iseed =   10
+ ipseed = 3
+ npart = 2048
+
+ gamma0=  8500
+
+ delgam=  2.60000D+00
+
+   rxbeam=  3.888E-05
+   rybeam=  3.415E-05
+   alphax=  1.083E+00
+   alphay= -8.419E-01
+
+ emitx =  1.0700000D-06
+
+ emity =  0.3900000D-06
+
+ xbeam =  0.000000D+00
+
+ ybeam =  0.000000D+00
+
+ pxbeam=  0.000000D+00
+
+ pybeam=  0.000000D+00
+
+ conditx =  0.000000D+00
+
+ condity =  0.000000D+00
+
+ bunch =  0.000000D+00
+
+ bunchphase =  0.000000D+00
+
+ emod =  0.000000D+00
+
+ emodphase =  0.000000D+00
+
+ xlamds=        1.5e-09
+ prad0 =  2.000000D-4
+ zrayl =  3.000000D+01
+
+ zwaist=  0.000000D+00
+
+ ncar  =  251
+
+ lbc   =    0
+
+ rmax0 =  1.100000D+01
+
+ dgrid =  750.e-6
+
+ nscr  =    1
+
+ nscz  =    0
+
+ nptr  =   40
+
+ nwig  =  112
+
+ zsep  =  1.000000D+00
+
+ delz  =  1.000000D+00
+
+ nsec  =    1
+
+ iorb  =    0
+
+
+
+ magin =    1
+
+ magout=    0
+
+ quadf =  1.667000D+01
+
+ quadd = -1.667000D+01
+
+ fl    =  8.000000D+00
+
+ dl    =  8.000000D+00
+
+ drl   =  1.120000D+02
+
+ f1st  =  0.000000D+00
+
+ qfdx  =  0.000000D+00
+
+ qfdy  =  0.000000D+00
+
+ solen =  0.000000D+00
+
+ sl    =  0.000000D+00
+
+ ildgam=    9
+
+ ildpsi=    1
+
+ ildx  =    2
+
+ ildy  =    3
+
+ ildpx =    5
+
+ ildpy =    7
+
+ itgaus=    1
+
+ nbins =    8
+
+ igamgaus =    1
+
+ inverfc =    1
+
+ lout  = 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0
+
+ iphsty=    1
+
+ ishsty=    1
+
+ ippart=    0
+
+ ispart=    1
+
+ ipradi=    0
+
+ isradi=    0
+
+ idump =    0
+
+ iotail=    1
+
+ nharm =    1
+
+ iallharm =  1
+
+ curpeak=  3.000000D+03
+
+ curlen= 0.000000D+00
+
+ ntail = 0
+
+ nslice= 1500
+
+ shotnoise=  1.000000D+00
+
+ isntyp=    0
+
+ iall  =    1
+
+ itdp  =    1
+
+
+
+ iscan =    0
+
+ nscan =    3
+
+ svar  =  1.000000D-02
+
+ isravg=    0
+
+ isrsig=    1
+
+ cuttail= -1.000000D+00
+
+ eloss =  0.000000D+00
+
+ version=  1.000000D-01
+
+ ndcut = 150
+
+ idmpfld=    0
+
+ idmppar=    0
+
+ ilog  =    0
+
+ ffspec=    1
+ 
+zstop = 32
+
+WCOEFZ(1) = 12
+
+WCOEFZ(2) = -.00
+
+WCOEFZ(3) =1
+
+beamfile = 'flattop.dat'
+maginfile ='lattice.lat'
+filetype ='ORIGINAL'
+outputfile='genesismp.out'
+gamma0 = 8098.194
+ndcut = 150
+
+zsep = 1
+delz = 1
+ishsty = 5
+iphsty = 5
+npart = 2048
+nslice = 11740
+ipseed = 1
+zstop = 120
+curpeak = 1500
+WCOEFZ(1) = 13.1
+WCOEFZ(2) = 0.03
+WCOEFZ(3) = 2
+$end
+

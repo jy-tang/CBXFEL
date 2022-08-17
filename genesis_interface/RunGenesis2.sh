@@ -2,7 +2,7 @@
 
 #SBATCH --partition=shared
 #
-#SBATCH --job-name=rafel
+#SBATCH --job-name=genesis
 #SBATCH --output=output-%j.txt
 #SBATCH --error=output-%j.err
 #

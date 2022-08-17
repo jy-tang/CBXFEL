@@ -1,13 +1,13 @@
 # -*- coding: iso-8859-1 -*-
 
 from __future__ import print_function
-from genesis import genesis, parsers, lattice, analysis, lattice_operations, bsub
+from genesis_interface import genesis, parsers, lattice, analysis, lattice_operations, bsub
 import os, time
 import numpy as np
 from make_lattice2 import *
 #from make_lattice import *
 import subprocess
-from genesis.writers import write_beam_file
+from genesis_interface.writers import write_beam_file
 
 #g.auto_cleanup = False
 #g.load_inputfile('genesis.in')

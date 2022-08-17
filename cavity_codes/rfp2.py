@@ -446,7 +446,7 @@ def read_dfl(filename, ncar=251, verboseQ=1, conjugate_field_for_genesis=False, 
     else:
         return fld
 
-def write_dfl(fld,filename, conjugate_field_for_genesis=True, swapxyQ=True, verboseQ= True):
+def write_dfl(fld,filename, conjugate_field_for_genesis=False, swapxyQ=False, verboseQ= True):
     
     if swapxyQ:
         t0 = time.time()

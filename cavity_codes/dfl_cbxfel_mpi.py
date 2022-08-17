@@ -525,7 +525,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         print("It takes " + str(time.time()-t0) + "seconds to finish merging files")
 
 
-        
+
+params_dic = pickle.load( open( "params.p", "rb" ) )        
+recirculate_to_undulator_mpi(**params_dic) 
         
 #if __name__ == '__main__':
 #    ncar = 181
