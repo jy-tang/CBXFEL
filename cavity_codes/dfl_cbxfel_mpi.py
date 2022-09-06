@@ -166,13 +166,19 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                              l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
                              verboseQ = 1,    # verbose params
                              nRoundtrips = 0,                     # recirculation params
-                             readfilename = None, workdir = None, saveFilenamePrefix = None):        # read and write
+                             readfilename = None, seedfilename = None, workdir = None, saveFilenamePrefix = None):        # read and write
     
     t00 = time.time()
     
     comm = MPI.COMM_WORLD
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
+    
+    if rank == 0:
+        with open('recirc.txt', "w") as myfile:
+            myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
+        with open('transmit.txt', "w") as myfile:
+            myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
     
     
     h_Plank = 4.135667696e-15      # Plank constant [eV-sec]
@@ -265,7 +271,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
 
         
 
-        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt)
+        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt, verbose = True)
 
         init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
     
@@ -390,8 +396,10 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
             # record the current slice
             fld_block[k,:, :] = fld_slice
+            #fld_block_transmit[k, :, :] = fld_slice_transmit
         
         pickle.dump(fld_block, open(workdir + '/'+saveFilenamePrefix + "_block"+str(rank)+"_round"+str(l+1)+".p", "wb" ) ) 
+        #pickle.dump(fld_block_transmit, open(workdir + '/'+saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round"+str(l+1) + ".p", "wb" ) )
             
         
        
@@ -407,21 +415,21 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # gather fld_blocks back to the root node
     #-------------------------------------------------------------------------------------------------
     
-    #sendbuf2_real = np.ascontiguousarray(np.real(fld_block))
-    #sendbuf2_imag = np.ascontiguousarray(np.imag(fld_block))
+    sendbuf2_real = np.ascontiguousarray(np.real(fld_block))
+    sendbuf2_imag = np.ascontiguousarray(np.imag(fld_block))
     
-    #if rank ==0:
-        #recvbuf2_real = np.zeros((nslice_padded, nx, ny))
-        #recvbuf2_imag = np.zeros((nslice_padded, nx, ny))
+    if rank ==0:
+        recvbuf2_real = np.zeros((nslice_padded, nx, ny))
+        recvbuf2_imag = np.zeros((nslice_padded, nx, ny))
 
-    #else:
-        #recvbuf2_real = None
-        #recvbuf2_imag = None
+    else:
+        recvbuf2_real = None
+        recvbuf2_imag = None
     
-    #comm.Gatherv(sendbuf2_real, [recvbuf2_real, count*nx*ny, displ, MPI.DOUBLE], root=0)
-    #comm.Barrier()
-    #comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
-    #comm.Barrier()
+    comm.Gatherv(sendbuf2_real, [recvbuf2_real, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    comm.Barrier()
+    comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
+    comm.Barrier()
     
 
     
@@ -429,25 +437,25 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     # inverse fft in time on the root node
     #-------------------------------------------------------------------------------------------------
     
-    #if rank == 0:
-    #    fld = recvbuf2_real + 1j* recvbuf2_imag
+    if rank == 0:
+        fld = recvbuf2_real + 1j* recvbuf2_imag
 
         #----------------------
         # ifft to time domain
         #----------------------
-    #    t0 = time.time()
-    #    fld = ifft(np.fft.ifftshift(fld,axes = 0), axis=0)
-    #    if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
+        t0 = time.time()
+        fld = ifft(np.fft.ifftshift(fld,axes = 0), axis=0)
+        if verboseQ: print('took',time.time()-t0,'seconds for ifft over t')
 
         #----------------
         # Dpadt in time
         #----------------
-    #    if int(Dpadt) > 0:
+        if int(Dpadt) > 0:
 
-    #        fld = unpad_dfl_t(fld, [int(Dpadt), int(Dpadt)])
-    #        print("shape of fld after unpadding is ", fld.shape)
+            fld = unpad_dfl_t(fld, [int(Dpadt), int(Dpadt)])
+            print("shape of fld after unpadding is ", fld.shape)
 
-   #         if verboseQ: print('Removed padding of ',dt*int(npadt)*1e15,'fs in time from head and tail of field')
+            if verboseQ: print('Removed padding of ',dt*int(npadt)*1e15,'fs in time from head and tail of field')
 
 
 
@@ -456,12 +464,12 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         #-----------------------------------------
 
         # write field to disk
-   #     if writefilename != None:
-   #         print('Writing to',writefilename)
+        if seedfilename != None:
+            print('Writing seed file to',seedfilename)
                 #writefilename = readfilename + 'r'
-   #         write_dfl(fld, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+            write_dfl(fld, seedfilename,conjugate_field_for_genesis = False,swapxyQ=False)
 
-   #     print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
+        print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
     
     #-----------------------------------------------------------------------------------------
     # merge files from each roundtrip
@@ -479,6 +487,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             else:
                 Round_range = range(count_sum2[rank-1], count_sum2[rank])
             for Round in Round_range:
+                # ---------------merge reflection files-----------------------------------------------
                 field_t = []
                 for block in range(nprocs):
                     loadname = workdir + '/'+saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
@@ -492,11 +501,19 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
                 
                 
                 energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-                print("Round ", str(Round), " reflection")
+                return_field_info = [Round, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+               
+                with open('recirc.txt', "a") as myfile:
+                    myfile.write(" ".join(str(item) for item in return_field_info))
+                    myfile.write("\n")
+              
                 
                 #write to disk
                 writefilename = workdir + '/'+ saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
                 write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+                
+                
+               
     
     comm.Barrier()
 
@@ -514,7 +531,12 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
         
         energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-        print("Round 0 transmission")
+        
+        return_field_info = [rank, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+        with open('transmit.txt', "a") as myfile:
+            myfile.write(" ".join(str(item) for item in return_field_info))
+            myfile.write("\n")
+        
     
         writefilename =workdir + '/'+ saveFilenamePrefix+"_field_transmit_round0" + '.dfl' 
         write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
