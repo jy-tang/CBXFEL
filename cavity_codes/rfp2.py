@@ -739,7 +739,7 @@ def rfp(fld, xlamds, dgridin, A, B, D, intensity_scale_factor=1., ncar=0, nslip=
     return fld 
 
 
-def fld_info(fld, dgrid = 400.e-6, dt=1e-6/3e8):
+def fld_info(fld, dgrid = 400.e-6, dt=1e-6/3e8,verbose = False):
     
     power = np.abs(fld)**2
         
@@ -770,7 +770,7 @@ def fld_info(fld, dgrid = 400.e-6, dt=1e-6/3e8):
     
     maxpower = np.amax(tproj)/1e9
     
-    ndecimals = 6
+    ndecimals = 12
     xmean = np.around(xmean, ndecimals); ymean = np.around(ymean, ndecimals);tmean = np.around(tmean, ndecimals)
     xrms = np.around(xrms, ndecimals); yrms = np.around(yrms, ndecimals); trms = np.around(trms, ndecimals)
     xfwhm = np.around(xfwhm, ndecimals)[0]; yfwhm = np.around(yfwhm, ndecimals)[0];  tfwhm = np.around(tfwhm, ndecimals)[0]
@@ -781,7 +781,8 @@ def fld_info(fld, dgrid = 400.e-6, dt=1e-6/3e8):
     
     
     #xmean *= 1e6; ymean *= 1e6; xrms *= 1e6; yrms *= 1e6;
-    print('energy = ' + str(energy_uJ) + 'uJ, ' + 'peakpower = ' + str(maxpower) + 'GW, '
+    if verbose:
+        print('energy = ' + str(energy_uJ) + 'uJ, ' + 'peakpower = ' + str(maxpower) + 'GW, '
          +'trms = '+str(trms) + 'fs, ' + 'tfwhm = ' + str(tfwhm) + 'fs, '
          +'xrms = '+str(xrms) + 'um, ' + 'xfwhm = ' + str(xfwhm) + 'um, '
         +'yrms = '+str(xrms) + 'um, ' + 'yfwhm = ' + str(yfwhm) + 'um, ')
@@ -854,7 +855,7 @@ def get_spectrum(dfl, dt, xlamds, npad = 0, onaxis=False):
     field = np.pad(field, (npad, npad))
     ftfld = np.fft.fftshift(np.fft.fft(field))
     spectra = np.abs(ftfld)**2
-    spectra /= np.max(spectra)
+    spectra /= np.sum(spectra)
     
     return hws, spectra
         

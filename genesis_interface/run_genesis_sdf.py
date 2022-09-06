@@ -98,7 +98,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     
     
     # be mindful of the length of the filename (genesis can only handle ~20 characters)
-    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs,6))+'_nt'+str(Nt) + '_nf' + str(Nf)
+    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs,6))#+'_nt'+str(Nt) + '_nf' + str(Nf)
     
     if len(nametag) > 0:
         sim_name += '_' + nametag

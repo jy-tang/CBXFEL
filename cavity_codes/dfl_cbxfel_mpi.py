@@ -174,12 +174,6 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
     
-    if rank == 0:
-        with open('recirc.txt', "w") as myfile:
-            myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
-        with open('transmit.txt', "w") as myfile:
-            myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
-    
     
     h_Plank = 4.135667696e-15      # Plank constant [eV-sec]
     c_speed  = 299792458           # speed of light[m/sec]
