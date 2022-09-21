@@ -3,11 +3,11 @@ import time, os, sys
 from rfp2 import *
 from Bragg_mirror import *
 import time
-import pickle
 from mpi4py import MPI
 import psutil
 import pickle
 from pathlib import Path
+import gc
 
 def propagate_slice_kspace(field, z, xlamds, kx, ky):
     H = np.exp(-1j*xlamds*z*(kx**2 + ky**2)/(4*np.pi))
@@ -382,7 +382,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         
            # propagate the slice from und start to und start
-            fld_slice, _ = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+            fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
                              R00_slice = R00_slice, R0H_slice = R0H_slice,     
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
@@ -390,10 +390,10 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
             # record the current slice
             fld_block[k,:, :] = fld_slice
-            #fld_block_transmit[k, :, :] = fld_slice_transmit
+            fld_block_transmit[k, :, :] = fld_slice_transmit
         
         pickle.dump(fld_block, open(workdir + '/'+saveFilenamePrefix + "_block"+str(rank)+"_round"+str(l+1)+".p", "wb" ) ) 
-        #pickle.dump(fld_block_transmit, open(workdir + '/'+saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round"+str(l+1) + ".p", "wb" ) )
+        pickle.dump(fld_block_transmit, open(workdir + '/'+saveFilenamePrefix +"_block_transmit_"+str(rank)+"_round"+str(l+1) + ".p", "wb" ) )
             
         
        
@@ -408,6 +408,15 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #-------------------------------------------------------------------------------------------------
     # gather fld_blocks back to the root node
     #-------------------------------------------------------------------------------------------------
+    
+    del kx_mesh
+    del ky_mesh
+    del xmesh
+    del ymesh
+    del  R0H
+    del  R00
+    gc.collect()
+    
     
     sendbuf2_real = np.ascontiguousarray(np.real(fld_block))
     sendbuf2_imag = np.ascontiguousarray(np.imag(fld_block))
@@ -425,7 +434,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     comm.Gatherv(sendbuf2_imag, [recvbuf2_imag, count*nx*ny, displ, MPI.DOUBLE], root=0)
     comm.Barrier()
     
-
+    del sendbuf2_real
+    del sendbuf2_imag
+    
     
     #-------------------------------------------------------------------------------------------------
     # inverse fft in time on the root node
@@ -433,7 +444,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     
     if rank == 0:
         fld = recvbuf2_real + 1j* recvbuf2_imag
-
+        
+        del  recvbuf2_real
+        del  recvbuf2_imag
         #----------------------
         # ifft to time domain
         #----------------------
@@ -464,83 +477,11 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
             write_dfl(fld, seedfilename,conjugate_field_for_genesis = False,swapxyQ=False)
 
         print('It takes ' + str(time.time() - t00) + ' seconds to finish the recirculation.') 
+        
+        del fld
+        
+        gc.collect()
     
-    #-----------------------------------------------------------------------------------------
-    # merge files from each roundtrip
-    #-----------------------------------------------------------------------------------------
-    t0 = time.time()
-    # merge blocks of each roundtrip
-    if nRoundtrips > 0:
-        ave2, res2 = divmod(nRoundtrips + 1, nprocs)
-        count2 = [ave2 + 1 if p < res2 else ave2 for p in range(nprocs)]
-        count2 = np.array(count2)
-        count_sum2 = [sum(count2[:p]) for p in range(nprocs)]
-        if count2[rank] > 0:
-            if rank == 0:
-                Round_range = range(0, count_sum2[0])
-            else:
-                Round_range = range(count_sum2[rank-1], count_sum2[rank])
-            for Round in Round_range:
-                # ---------------merge reflection files-----------------------------------------------
-                field_t = []
-                for block in range(nprocs):
-                    loadname = workdir + '/'+saveFilenamePrefix + "_block"+str(block)+"_round"+str(Round)+".p"
-                    field_t.append(pickle.load( open(loadname , "rb" )))
-                field_t = np.concatenate(field_t, axis = 0)
-                
-                # fft in time and unpad
-                field_t = ifft(np.fft.ifftshift(field_t,axes = 0), axis=0)
-                if int(Dpadt) > 0:
-                    field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
-                
-                
-                energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-                return_field_info = [Round, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
-               
-                with open('recirc.txt', "a") as myfile:
-                    myfile.write(" ".join(str(item) for item in return_field_info))
-                    myfile.write("\n")
-              
-                
-                #write to disk
-                writefilename = workdir + '/'+ saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
-                write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
-                
-                
-               
-    
-    comm.Barrier()
-
-    if rank == 0:
-        #merge transmit block at round0
-        field_t = []
-        for block in range(nprocs):
-            loadname = workdir + '/'+saveFilenamePrefix + "_block_transmit_"+str(block)+"_round0"+".p"
-            field_t.append(pickle.load( open(loadname , "rb" )))
-        field_t = np.concatenate(field_t, axis = 0)
-        
-        # fft in time and unpad
-        field_t = ifft(np.fft.ifftshift(field_t,axes = 0), axis=0)
-        if int(Dpadt) > 0:
-            field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
-        
-        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-        
-        return_field_info = [rank, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
-        with open('transmit.txt', "a") as myfile:
-            myfile.write(" ".join(str(item) for item in return_field_info))
-            myfile.write("\n")
-        
-    
-        writefilename =workdir + '/'+ saveFilenamePrefix+"_field_transmit_round0" + '.dfl' 
-        write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
-        
-        # delete block files
-        for filename in Path(workdir).glob("*.p"):
-            filename.unlink()
-        print("It takes " + str(time.time()-t0) + "seconds to finish merging files")
-
-
 
 params_dic = pickle.load( open( "params.p", "rb" ) )        
 recirculate_to_undulator_mpi(**params_dic) 

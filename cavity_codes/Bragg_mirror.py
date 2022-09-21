@@ -63,7 +63,8 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
         
         if undo_slippageQ:
             ds_shift = 2. * np.abs(chi_h) * np.sin(theta_0)
-            ds_shift *= (1./np.sin(theta_0)+1.)/2. # fudge factor to reduce slippage more
+            ds_shift *= (1./np.sin(theta_0)+1.)/2.2 # fudge factor to reduce slippage more
+            print(ds_shift)
             R0H *= np.exp(-1j * 2. * np.pi / Lambda * ds_shift)
         if undo_xshiftQ:
             dx_shift = 2. * np.abs(chi_h) * np.cos(theta_0)
