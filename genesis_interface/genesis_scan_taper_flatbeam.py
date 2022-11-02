@@ -63,7 +63,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
     
-def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3 ):
+def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 100e-15, sigma = 10e-15, chirp = 10, Ipeak = 2e3 ):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -103,12 +103,14 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     zs = ts*c_speed
     I = np.exp(-(zs - np.mean(zs))**2/2/sigma_z**2)
     I *= 1/np.max(I)*Ipeak
+    #I = Ipeak*np.ones((100, ))
     gamma = gamma0 + np.linspace(-0.5,0.5,100)*chirp/0.511
-    delgam = np.ones((100,))*1/0.511
+    delgam = np.ones((100,))*0/0.511
     enx = np.ones((100,))*emitnx
     eny = np.ones((100,))*emitny
     beamfile={'ZPOS':zs,'CURPEAK':I, 'GAMMA0': gamma, 'DELGAM':delgam, 'EMITX':enx, 'EMITY':eny}
-    write_beam_file(beamfile,'chirp.beam')
+    beamfilename = 'chirp' + str(chirp) +'.beam'
+    write_beam_file(beamfile,beamfilename)
     
     xrms_match, yrms_match = match_to_FODO(gamma0 = gamma0, emitnx = emitnx, emitny = emitny)
     
@@ -127,7 +129,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
    # g.input['xlamds'] = 1.76363e-09
     
     g.input['delz'] = 1# set to 1 for ESASE
-    g.input['zsep'] = 80# set to 1 for ESASE
+    g.input['zsep'] = 200# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
     g.input['curpeak'] = 2e3 # make sure no random stuff slips in
@@ -143,14 +145,14 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['ipseed'] = ipseed
     g.input['npart'] = 4096
     g.input['ishsty'] = 5
-    g.input['idmpfld'] = 1
+    g.input['idmpfld'] = 0
     g.input['ntail'] = 0
-    g.input['ncar'] =181
+    g.input['ncar'] =361
     g.input['dgrid'] = 540e-6
     g.input['alignradf'] = 1
     
-    g.input['prad0'] = 2e8
-    w0 = 15e-6
+    g.input['prad0'] = 2e9
+    w0 = 25e-6
     g.input['zrayl'] = np.pi*w0**2/g.input['xlamds']
     
     g.input['rxbeam'] = xrms_match
@@ -163,7 +165,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
  
      #g.input['fieldfile'] = 'n8.dfl'
     # http://genesis.web.psi.ch/download/documentation/genesis_manual.pdf
-    g.input['beamfile'] = 'chirp.beam'
+    g.input['beamfile'] =  beamfilename
     
     g.write_input_file()
     
@@ -174,10 +176,16 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     os.chdir(root_dir)
 
 #---------for normal conducting undulator---------------------------------#
+#for dKbyK in np.linspace(0,0.01,6):
+#    start_simulation(folder_name = 'data_short', dKbyK = dKbyK,undKs = 1.172,und_period = 0.026,und_nperiods=130,nametag = '',gamma0 = np.around(8000./0.511,3), Nf=5, Nt=7)
 
-start_simulation(folder_name = 'data_long', dKbyK = 0.03,undKs = 1.172,und_period = 0.026,und_nperiods=130,nametag = '',gamma0 = np.around(8000./0.511,3), Nf=4, Nt=28)
-    
-    
+#for chirp in [5,10,15,20,25,30]:
+#    start_simulation(folder_name = 'comp_theory', dKbyK =  0.0,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen = 100e-15, sigma = 10e-15, chirp = chirp, nametag = str(chirp),gamma0 = np.around(8000./0.511,3), Nf=5, Nt = 5)
+
+chirp = 80
+start_simulation(folder_name = 'data_short5', dKbyK =  0.006,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen =200e-15, sigma = 20e-15, chirp = chirp, nametag ='a',gamma0 = np.around(8000./0.511,3), Nf=1, Nt = 11,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6)
+
+
 #for undKs in np.linspace(1.166,1.171, 6):
 #    start_simulation(folder_name = 'S2E/fromZhen/XAMP_0.24', dKbyK = 0.,undKs = undKs,und_period = 0.026,und_nperiods=130,nametag = 'a',gamma0 = np.around(8000./0.511,3), Nf=5, Nt=5)
 

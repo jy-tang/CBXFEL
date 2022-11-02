@@ -21,6 +21,7 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
     chi_h = 0.372253E-05 - 1j*0.141091E-07;
     chi_hbar = chi_h; # for centro-symmetric crystal
     ############################################################
+    dh = 0.89170487e-10;#0.891704865e-10; #interplanar distance (d-spacing?) (for 400 diamond at 9831 eV for 45 degree bragg?)
 
     #d = 100e-6; #crystal thickness
     
@@ -41,7 +42,7 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
     b = gamma_0/gamma_h; # asymmetry factor
     P = 1.0; # polarization factor, sigma case = 1
 
-    dh = 0.89170487e-10;#0.891704865e-10; #interplanar distance (d-spacing?) (for 400 diamond at 9831 eV for 45 degree bragg?)
+    
     H = 2.*pi/dh; # Bragg vector
     K0 = 2.*pi/Lambda; # magnitude of K0 vector
     # alpha = (2*K0*H*np.sin(Theta)-H**2)/(K0**2); #Deviation parameter

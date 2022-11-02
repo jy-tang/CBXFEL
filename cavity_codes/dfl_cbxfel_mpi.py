@@ -1,7 +1,7 @@
 import numpy as np
 import time, os, sys
 from rfp2 import *
-from Bragg_mirror import *
+from Bragg_mirror2 import *
 import time
 from mpi4py import MPI
 import psutil
@@ -14,7 +14,7 @@ def propagate_slice_kspace(field, z, xlamds, kx, ky):
     return field*H
 
 def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0], 
-                         verboseQ = True, xlim = None, ylim = None):
+                         verboseQ = True, xlim = None, ylim = None, d = 50e-6):
     t0 = time.time()
     
     h_Plank = 4.135667696e-15;      # Plank constant [eV-sec]
@@ -35,9 +35,9 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0],
     
 
    
-    R0H = Bragg_mirror_reflection(eph, theta).T
+    R0H = Bragg_mirror_reflection(eph, theta, d).T
     
-    R00 = Bragg_mirror_transmission(eph, theta).T
+    R00 = Bragg_mirror_transmission(eph, theta, d).T
         
     if verboseQ: print('took',time.time()-t0,'seconds to calculate Bragg filter')
         
@@ -46,7 +46,7 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0],
 
 
 def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x, y)
-                             R00_slice, R0H_slice,     # Bragg reflection information
+                             R00_slice, R0H_slice, R00_slice_2, R0H_slice_2,    # Bragg reflection information
                              l_cavity, l_undulator, w_cavity,  # cavity parameter
                              lambd_slice, kx_mesh, ky_mesh, xmesh, ymesh, #fld slice information
                              roundtripQ,               # recirculation parameter
@@ -115,14 +115,14 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         
         
     # reflect from M2
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
         
     # drift to M3
     Ldrift = l_cavity
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M3
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
         
     # drift to lens
     Ldrift = w_cavity/2
@@ -142,7 +142,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M4
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
         
     # drift to undulator start
     Ldrift = z_und_start
@@ -163,7 +163,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
 
 def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,           # dfl params
                              npadt = 0, Dpadt = 0, npadx = [0,0],isradi = 1,       # padding params
-                             l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
+                             l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6,  # cavity params
                              verboseQ = 1,    # verbose params
                              nRoundtrips = 0,                     # recirculation params
                              readfilename = None, seedfilename = None, workdir = None, saveFilenamePrefix = None):        # read and write
@@ -230,7 +230,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #----------------------------    
 
     R0H, R00 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
-                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10])    
+                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10], d = d1)   #first mirror
+    R0H_2, R00_2 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
+                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10], d = d2)   #2-4 mirror
     
     
     #-------------------------------------------------------------------------------------------
@@ -349,13 +351,15 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         ind0 = count_sum[rank]
         R00_slice = np.squeeze(R00[ind0+k, :])
         R0H_slice = np.squeeze(R0H[ind0+k, :])
+        R00_slice_2 = np.squeeze(R00_2[ind0+k, :])
+        R0H_slice_2 = np.squeeze(R0H_2[ind0+k, :])
         lambd_slice = lambd[ind0+k]
         
        
         
         # propagate the slice from und end to und start
         fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
-                             R00_slice = R00_slice, R0H_slice = R0H_slice,     
+                             R00_slice = R00_slice, R0H_slice = R0H_slice,  R00_slice_2 = R00_slice_2, R0H_slice_2 = R0H_slice_2,    
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
                              roundtripQ = False, verboseQ = False)

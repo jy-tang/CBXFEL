@@ -16,7 +16,7 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
     nblocks = 128
     
     # merge recirculation and transmission blocks of each roundtrip
-    if nRoundtrips > 0:
+    if nRoundtrips >= 0:
         ave2, res2 = divmod(nRoundtrips + 1, nprocs)
         count2 = [ave2 + 1 if p < res2 else ave2 for p in range(nprocs)]
         
@@ -24,7 +24,7 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
             print(count2)
         
         count2 = np.array(count2)
-        count_sum2 = [sum(count2[:p]) for p in range(nprocs)]
+        count_sum2 = [sum(count2[:p+1]) for p in range(nprocs)]
         
         if rank == 0:
             print(count_sum2)
@@ -103,9 +103,6 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
         for filename in Path(workdir).glob("*.p"):
             filename.unlink()
         
-        
-        del field_t
-        gc.collect()
 
 
 params_dic = pickle.load( open( "merge_params.p", "rb" ) )        

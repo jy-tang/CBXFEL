@@ -31,7 +31,7 @@ def start_recirculation(zsep, nslice, npadt, npadx, nRoundtrips,
                         readfilename, seedfilename, workdir, saveFilenamePrefix,
                         ncar = 181 , dgrid =540e-6,  xlamds=1.261043e-10,   
                        Dpadt = 0, isradi = 1,       # padding params
-                       l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1,  # cavity params
+                       l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
                     verboseQ = 1):
     
     param_dic = locals()

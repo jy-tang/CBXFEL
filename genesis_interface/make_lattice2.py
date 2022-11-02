@@ -21,10 +21,10 @@ def make_lattice(undKs=[1.1742,1.1742,[1.1742,1.1771],[1.1771,1.18],[1.18,1.1829
     fill_len = fill_nper * und_period
     if fill_nper < 0:
         print('ERROR - make_lattice: undulator is longer than half the FODO length')
-    if fill_nper >= 10:
-        quad_len_nper = 10
-    else:
-        quad_len_nper = max(2, int(quad_length / und_period))
+    #if fill_nper >= 10:
+    #    quad_len_nper = 10
+    #else:
+    quad_len_nper = max(2, int(quad_length / und_period))
     halfquad_len_nper = quad_len_nper / 2
     quad_grad_scaled = quad_grad * quad_length / und_period / quad_len_nper
         
@@ -48,7 +48,8 @@ def make_lattice(undKs=[1.1742,1.1742,[1.1742,1.1771],[1.1771,1.18],[1.18,1.1829
             AD = np.sqrt(AD**2 + (1 + Kend**2) * np.abs(phaseShifts[i]) / (2. * np.pi * fill_nper))
         
         lines += ['QF   ' + numstr(qgrad) + '   ' + str(halfquad_len_nper) + '   0']
-        lines += ['QF   ' + numstr(0.0) + '   ' + str(und_nperiods + quad_len_nper) + '   0']
+        #lines += ['QF   ' + numstr(0.0) + '   ' + str(und_nperiods + quad_len_nper) + '   0']
+        lines += ['QF   ' + numstr(0.0) + '   ' + str(half_fodo_nper - quad_len_nper) + '   0']
         lines += ['QF   ' + numstr(-qgrad) + '   ' + str(halfquad_len_nper) + '   0']
         
         lines += ['AD   ' + numstr(AD) + '   ' + str(fill_nper/2) + '   0' ]

@@ -76,7 +76,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
 
-def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, nslice = 1024, zsep = 80,  ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3,dfl_filename = None ):
+def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, nslice = 1024, zsep = 80,  ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3,dfl_filename = None, xlamds =1.261043e-10  ):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -106,7 +106,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     
     #------------------------Make Lattice----------------------------------------#
     latticefile =  "lattice"+str(int(undKs*1e6))+".dat"
-    make_lattice(undKs=[undKs]*40,latticefilepath=latticefile,und_period=und_period, und_nperiods = und_nperiods)
+    make_lattice(undKs=[undKs]*40, und_period=und_period, und_nperiods=und_nperiods, fodo_length=3.9*2, quad_length=0.26, quad_grad=10, latticefilepath=latticefile, phaseShifts=None)
     
     
     #------------------------Make Beam--------------------------------------------#
@@ -139,7 +139,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     #g.input['idmppar'] = 1 # dpa
    # g.input['xlamds'] = 1.76363e-09
     
-    g.input['delz'] = 1# set to 1 for ESASE
+    g.input['delz'] = 2# set to 1 for ESASE
     g.input['zsep'] = zsep# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
@@ -152,7 +152,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['gamma0'] = gamma0 #15427.59#np.around(7981./0.511,3)
     g.input['delgam'] = 1.0/0.511
     g.input['xlamd'] = und_period
-    g.input['xlamds'] = 1.261043e-10 #1.300e-10 #np.around(g.input['xlamd'] / 2. / g.input['gamma0']**2 * (1. + 1.725**2),9+6) # 4.36514e-10
+    g.input['xlamds'] = xlamds #1.300e-10 #np.around(g.input['xlamd'] / 2. / g.input['gamma0']**2 * (1. + 1.725**2),9+6) # 4.36514e-10
     g.input['ipseed'] = ipseed
     g.input['npart'] = 4096
     g.input['ishsty'] = 5
