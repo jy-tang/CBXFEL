@@ -49,7 +49,9 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
     alpha = (H/K0)*(H/K0-2.*gamma_0);
 
     lambda_hs = np.sin(Theta)/(K0*np.abs(P)*np.sqrt(chi_h*chi_hbar)); # symmetric extinction length
+ 
     lambda_h = np.sqrt(gamma_0*np.abs(gamma_h))/(K0*np.abs(P)*np.sqrt(chi_h*chi_hbar)); # extinction length
+
     y = K0*lambda_h/(2.*gamma_0)*(b*alpha+chi_0*(1.-b));
 
     Y1 = -y+np.sqrt(y**2+b/np.abs(b));
@@ -65,7 +67,6 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
         if undo_slippageQ:
             ds_shift = 2. * np.abs(chi_h) * np.sin(theta_0)
             ds_shift *= (1./np.sin(theta_0)+1.)/2.2 # fudge factor to reduce slippage more
-            print(ds_shift)
             R0H *= np.exp(-1j * 2. * np.pi / Lambda * ds_shift)
         if undo_xshiftQ:
             dx_shift = 2. * np.abs(chi_h) * np.cos(theta_0)
@@ -81,50 +82,47 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
         #R001 = R00-C;
         return R00
     
-def Bragg_mirror_reflection(photon_energies_eV, angles_rad, undo_slippageQ=1):
-    return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippageQ=undo_slippageQ)
+def Bragg_mirror_reflection(photon_energies_eV = None, angles_rad = None, d = 100e-6, undo_slippageQ=1):
+    return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippageQ=undo_slippageQ, d = d)
     
-def Bragg_mirror_transmission(photon_energies_eV, angles_rad, undo_slippageQ=1):
-    return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=False, undo_slippageQ=undo_slippageQ)
+def Bragg_mirror_transmission(photon_energies_eV = None, angles_rad = None, d = 100e-6, undo_slippageQ=1):
+    return Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=False, undo_slippageQ=undo_slippageQ, d = d)
     
-def plot_Bragg_mirror_response_slice(theta_slice=np.pi/4.):
+
+def plot_Bragg_mirror_response_slice(eph = None, theta = None, theta_slice=np.pi/4., d = 100e-6):
     
     pi = np.pi
-    eph = np.linspace(9831.65,9832.25,5001);
+    if not eph:
+        eph = np.linspace(9831,9833,5001);
     theta_0 = 45.0*pi/180.; dtheta_0 = 50e-6; ntheta_0 = 101;
     #theta_0 *= 0.
-    theta = np.linspace(theta_0-dtheta_0,theta_0+dtheta_0,ntheta_0);
+    if not theta:
+        theta = np.linspace(theta_0-dtheta_0,theta_0+dtheta_0,ntheta_0);
     
-    R0H = Bragg_mirror_reflection(eph, theta)
-    R00 = Bragg_mirror_transmission(eph, theta)
+    R0H = Bragg_mirror_reflection(eph, theta, d)
+    R00 = Bragg_mirror_transmission(eph, theta, d)
 
     Eph,Thetaurad = np.meshgrid(eph,1e6*(theta-theta_slice));
     cut = Thetaurad == 0;
     
+    plt.figure(figsize=(10, 6))
     plt.plot(Eph[cut],np.abs(R0H[cut])**2)
     plt.title(['Angle = 45 deg'])
     plt.xlabel('Photon energy (eV)')
     plt.ylabel('Bragg diffration intensity')
     plt.show()
     
+    plt.figure(figsize=(10, 6))
     plt.plot(Eph[cut],np.abs(R00[cut])**2)
     plt.title(['Angle = 45 deg'])
     plt.xlabel('Photon energy (eV)')
     plt.ylabel('Forward diffration intensity')
     plt.show()
     
-    #plt.plot(Eph[cut],np.abs(C[cut]).^2)
-    #plt.title(['Angle = 45 deg'])
-    #plt.xlabel('Photon energy (eV)')
-    #plt.ylabel('intensity(prompt response)')
-    #plt.show()
     
-    #plt.plot(Eph[cut],np.abs(R001[cut]).^2)
-    #plt.title(['Angle = 45 deg'])
-    #plt.xlabel('Photon energy (eV)')
-    #plt.ylabel('intensity(forward diffration - prompt response)')
-    #plt.show()
-
+    return Eph[cut], np.abs(R0H[cut])**2, np.abs(R00[cut])**2
+    
+    
 # plotting stuff (slow)
 def plot_Bragg_mirror_response():
     

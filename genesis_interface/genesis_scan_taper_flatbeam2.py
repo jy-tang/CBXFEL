@@ -63,7 +63,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
     
-def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, quad_grad=12.64, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 100e-15, sigma = 10e-15, chirp = 10, Ipeak = 2e3 ):
+def start_simulation(dKbyK, folder_name, undKs = [1.169]*40, und_period = 0.026, und_nperiods=130, quad_grad=12.64, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 100e-15, sigma = 10e-15, chirp = 10, Ipeak = 2e3 ):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -85,16 +85,16 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     
     
     # be mindful of the length of the filename (genesis can only handle ~20 characters)
-    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs,6))+'_nt'+str(Nt) + '_nf' + str(Nf)
+    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs[-1],6))+'_nt'+str(Nt) + '_nf' + str(Nf)
     
     if len(nametag) > 0:
         sim_name += '_' + nametag
     print(sim_name)
     
     #------------------------Make Lattice----------------------------------------#
-    latticefile =  "lattice"+str(int(undKs*1e6))+".dat"
+    latticefile =  "lattice"+str(int(undKs[-1]*1e6))+".dat"
     #make_lattice(undKs=[undKs]*40,latticefilepath=latticefile,und_period=und_period, und_nperiods = und_nperiods)
-    make_lattice(undKs=[undKs]*40, und_period=und_period, und_nperiods=und_nperiods, fodo_length=3.9*2, quad_length=0.26, quad_grad=quad_grad, latticefilepath=latticefile, phaseShifts=None)
+    make_lattice(undKs=undKs, und_period=und_period, und_nperiods=und_nperiods, fodo_length=3.9*2, quad_length=0.26, quad_grad=quad_grad, latticefilepath=latticefile, phaseShifts=None)
     
     #------------------------Make Beam--------------------------------------------#
     c_speed = 299792458
@@ -128,11 +128,11 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     #g.input['idmppar'] = 1 # dpa
    # g.input['xlamds'] = 1.76363e-09
     
-    g.input['delz'] = 4# set to 1 for ESASE
-    g.input['zsep'] = 200# set to 1 for ESASE
+    g.input['delz'] =5# set to 1 for ESASE
+    g.input['zsep'] = 50# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
-    g.input['curpeak'] = 2e3 # make sure no random stuff slips in
+    g.input['curpeak'] = Ipeak # make sure no random stuff slips in
     g.input['nslice'] = 0#3865 #0 # have genesis make beam time-slices from the input particle distribution
     #print('curlen = ', g.input['curlen'])
     #print('ntail = ', g.input['ntail'])
@@ -146,6 +146,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['npart'] = 4096
     g.input['ishsty'] = 5
     g.input['idmpfld'] = 1
+    
     g.input['ntail'] = 0
     g.input['ncar'] =361
     g.input['dgrid'] = 540e-6
@@ -154,6 +155,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['prad0'] = 2e8
     w0 = 25e-6
     g.input['zrayl'] = np.pi*w0**2/g.input['xlamds']
+    
     
     g.input['rxbeam'] = xrms_match
     g.input['rybeam'] = yrms_match
@@ -186,11 +188,24 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
 #for taper in np.linspace(0.034,0.046,2):
 #    start_simulation(folder_name = 'data_3GeV', dKbyK = taper,undKs = 0.477,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='j',gamma0 = np.around(3000./0.511,3), Nf=2, Nt = 30,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
 
-chirp = 5
-start_simulation(folder_name = 'data_3GeV', dKbyK = 0.046,undKs = 0.477,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='l',gamma0 = np.around(3000./0.511,3), Nf=2, Nt = 30,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
+#chirp = 0
+#Nf = 4
+#Nt = 1
+
+#count = 0
+#for t in np.linspace(0.0,0.03, 6):
+#    undKs = [0.477]*2 + [[0.477, 0.477*(1-0.025)]] + [[0.477*(1-0.025),0.477*(1-0.025)*(1-0.01)]]+ [[0.477*(1-0.025)*(1-0.01), 0.477*(1-0.025)*(1-0.01)*(1-t)]]
+#    print(undKs)
+#    start_simulation(folder_name = 'data_3GeV', dKbyK = 0.0,undKs = undKs ,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='m',gamma0 = np.around(3000./0.511,3), Nf=Nf, Nt = Nt,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
+#    count += 1
+
 
 #chirp = 0
-#start_simulation(folder_name = 'data_3GeV', dKbyK = 0.0,undKs = 0.477,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='d',gamma0 = np.around(3000./0.511,3), Nf=3, Nt = 4,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
+#for t in np.linspace(0.01,0.03, 6):
+#    start_simulation(folder_name = 'data_3GeV_short2', dKbyK = t,undKs = [0.477]*40 ,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='d',gamma0 = np.around(3000./0.511,3), Nf=1, Nt = 11,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
+
+chirp = 0
+start_simulation(folder_name = 'data_3GeV_short2', dKbyK = 0,undKs = [0.477]*40 ,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='x',gamma0 = np.around(3000./0.511,3), Nf=1, Nt = 11,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 10)
 
 #chirp = 20
 #start_simulation(folder_name = 'data_3GeV', dKbyK = 0.025,undKs = 0.476,und_period = 0.01,und_nperiods=int(130*0.026/0.01), pulseLen =100e-15, sigma = 20e-15, chirp = chirp, nametag ='q',gamma0 = np.around(3000./0.511,3), Nf=3, Nt = 29,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, quad_grad = 16)

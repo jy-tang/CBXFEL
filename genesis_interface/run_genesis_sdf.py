@@ -76,7 +76,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
 
-def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, nslice = 1024, zsep = 80,  ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3,dfl_filename = None, xlamds =1.261043e-10  ):
+def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_nperiods=130, nslice = 1024, zsep = 80, dgrid = 540e-6, ncar = 181, delz = 2, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 60e-15, sigma = 20e-15, chirp = 20, Ipeak = 2e3,dfl_filename = None, xlamds =1.261043e-10, prad0 = 0, g_quad=14.584615):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -106,7 +106,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     
     #------------------------Make Lattice----------------------------------------#
     latticefile =  "lattice"+str(int(undKs*1e6))+".dat"
-    make_lattice(undKs=[undKs]*40, und_period=und_period, und_nperiods=und_nperiods, fodo_length=3.9*2, quad_length=0.26, quad_grad=10, latticefilepath=latticefile, phaseShifts=None)
+    make_lattice(undKs=[undKs]*40, und_period=und_period, und_nperiods=und_nperiods, fodo_length=3.9*2, quad_length=0.26, quad_grad = g_quad, latticefilepath=latticefile, phaseShifts=None)
     
     
     #------------------------Make Beam--------------------------------------------#
@@ -114,8 +114,9 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     ts = np.linspace(0., pulseLen, 100)
     sigma_z = sigma*c_speed
     zs = ts*c_speed
-    I = np.exp(-(zs - np.mean(zs))**2/2/sigma_z**2)
-    I *= 1/np.max(I)*Ipeak
+    #I = np.exp(-(zs - np.mean(zs))**2/2/sigma_z**2)
+    #I *= 1/np.max(I)*Ipeak
+    I = np.ones((100,))*Ipeak
     gamma = gamma0 + np.linspace(-0.5,0.5,100)*chirp/0.511
     delgam = np.ones((100,))*1/0.511
     enx = np.ones((100,))*emitnx
@@ -123,7 +124,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     beamfile={'ZPOS':zs,'CURPEAK':I, 'GAMMA0': gamma, 'DELGAM':delgam, 'EMITX':enx, 'EMITY':eny}
     write_beam_file(beamfile,'chirp.beam')
     
-    xrms_match, yrms_match = match_to_FODO(gamma0 = gamma0, emitnx = emitnx, emitny = emitny)
+    xrms_match, yrms_match = match_to_FODO(gamma0 = gamma0, emitnx = emitnx, emitny = emitny, g_quad = g_quad)
     
     #---------------------Genesis Input-------------------------------------------#
     
@@ -139,7 +140,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     #g.input['idmppar'] = 1 # dpa
    # g.input['xlamds'] = 1.76363e-09
     
-    g.input['delz'] = 2# set to 1 for ESASE
+    g.input['delz'] = delz# set to 1 for ESASE
     g.input['zsep'] = zsep# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
@@ -158,11 +159,11 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['ishsty'] = 5
     g.input['idmpfld'] = 1
     g.input['ntail'] = 0
-    g.input['ncar'] =181
-    g.input['dgrid'] = 540e-6
+    g.input['ncar'] =ncar
+    g.input['dgrid'] = dgrid
     g.input['alignradf'] = 1
     
-    g.input['prad0'] = 0
+    g.input['prad0'] = prad0
     w0 = 15e-6
     g.input['zrayl'] = np.pi*w0**2/g.input['xlamds']
     

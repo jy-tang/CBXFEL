@@ -1,7 +1,7 @@
 import numpy as np
 import time, os, sys
 from rfp2 import *
-from Bragg_mirror2 import *
+from Bragg_mirror3 import *
 import time
 from mpi4py import MPI
 import psutil
@@ -14,7 +14,7 @@ def propagate_slice_kspace(field, z, xlamds, kx, ky):
     return field*H
 
 def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0], 
-                         verboseQ = True, xlim = None, ylim = None, d = 50e-6):
+                         verboseQ = True,  d = 50e-6):
     t0 = time.time()
     
     h_Plank = 4.135667696e-15;      # Plank constant [eV-sec]
@@ -57,8 +57,11 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     
     
      # focal length of the lens
-    flens1 = (l_cavity + w_cavity)/2
-    flens2 = (l_cavity + w_cavity)/2
+    #flens1 = (l_cavity + w_cavity)/2
+    #flens2 = (l_cavity + w_cavity)/2
+    
+    flens1 = float('inf')
+    flens2 = float('inf')
     
     # propagation length in cavity
     z_und_start = (l_cavity - l_undulator)/2
@@ -230,9 +233,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #----------------------------    
 
     R0H, R00 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
-                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10], d = d1)   #first mirror
+                             verboseQ = True,  d = d1)   #first mirror
     R0H_2, R00_2 = Bragg_mirror_reflect(ncar = ncar, dgrid = dgrid, xlamds = xlamds, nslice = nslice_padded, dt = dt, npadx=npadx, 
-                             verboseQ = True, xlim = [9831,9833], ylim = [-10, 10], d = d2)   #2-4 mirror
+                             verboseQ = True,  d = d2)   #2-4 mirror
     
     
     #-------------------------------------------------------------------------------------------
@@ -267,9 +270,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
 
         
 
-        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt, verbose = True)
+        #energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt, verbose = True)
 
-        init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+        #init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
     
         #--------------------------------------------------
         # fft in time domain to get spectral representaion
@@ -387,7 +390,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         
            # propagate the slice from und start to und start
             fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
-                             R00_slice = R00_slice, R0H_slice = R0H_slice,     
+                             R00_slice = R00_slice, R0H_slice = R0H_slice, R00_slice_2 = R00_slice_2, R0H_slice_2 = R0H_slice_2, 
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
                              roundtripQ = True, verboseQ = False)

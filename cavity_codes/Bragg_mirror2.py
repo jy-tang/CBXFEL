@@ -8,7 +8,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 
-def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippageQ=True, undo_xshiftQ=True, d = 100e-6):
+def Bragg_mirror(photon_energies_eV, angles_rad, d = 100e-6,reflectionQ=True, undo_slippageQ=True, undo_xshiftQ=True):
     
     e_charge = 1.602176565e-19;     # charge unit[C]
     # h_Plank  = 6.62607004e-34;      # Plank constant [J-sec]
@@ -82,12 +82,12 @@ def Bragg_mirror(photon_energies_eV, angles_rad, reflectionQ=True, undo_slippage
         return R00
     
 def Bragg_mirror_reflection(photon_energies_eV, angles_rad,d = 100e-6,  undo_slippageQ=1):
-    return Bragg_mirror(photon_energies_eV, angles_rad, d, reflectionQ=True, undo_slippageQ=undo_slippageQ)
+    return Bragg_mirror(photon_energies_eV, angles_rad, d = d, reflectionQ=True, undo_slippageQ=undo_slippageQ)
     
 def Bragg_mirror_transmission(photon_energies_eV, angles_rad, d = 100e-6, undo_slippageQ=1):
-    return Bragg_mirror(photon_energies_eV, angles_rad, d, reflectionQ=False, undo_slippageQ=undo_slippageQ)
+    return Bragg_mirror(photon_energies_eV, angles_rad, d = d, reflectionQ=False, undo_slippageQ=undo_slippageQ)
     
-def plot_Bragg_mirror_response_slice(theta_slice=np.pi/4.):
+def plot_Bragg_mirror_response_slice(theta_slice=np.pi/4., d = 100e-6):
     
     pi = np.pi
     eph = np.linspace(6951.0,6953,5001);
@@ -95,8 +95,8 @@ def plot_Bragg_mirror_response_slice(theta_slice=np.pi/4.):
     #theta_0 *= 0.
     theta = np.linspace(theta_0-dtheta_0,theta_0+dtheta_0,ntheta_0);
     
-    R0H = Bragg_mirror_reflection(eph, theta)
-    R00 = Bragg_mirror_transmission(eph, theta)
+    R0H = Bragg_mirror_reflection(eph, theta, d)
+    R00 = Bragg_mirror_transmission(eph, theta, d)
 
     Eph,Thetaurad = np.meshgrid(eph,1e6*(theta-theta_slice));
     cut = Thetaurad == 0;

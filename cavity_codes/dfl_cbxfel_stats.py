@@ -56,8 +56,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     
     # propagate one slice around the cavity
     # take a slice in real space, unpadded, return a slice in real space, unpadded
-    
-    
+        
      # focal length of the lens
     flens1 = (l_cavity + w_cavity)/2
     flens2 = (l_cavity + w_cavity)/2
@@ -100,7 +99,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         if misalignQ:
             fld_slice *= np.exp(1j*M1*xmesh)
         if roughnessQ:
-            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C1*np.sin(np.pi/4 + M1/2))
+            #fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C1*np.sin(np.pi/4 + M1/2))
+            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C1*np.sin(np.pi/4))
         #fft to kx, ky space, check it!!!!
         fld_slice = np.fft.fftshift(fft2(fld_slice))
         
@@ -132,7 +132,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         if misalignQ:
             fld_slice *= np.exp(1j*M2*xmesh)
         if roughnessQ:
-            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C2*np.sin(np.pi/4 + M2/2))
+            #fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C2*np.sin(np.pi/4 + M2/2))
+            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C2*np.sin(np.pi/4))
         #fft to kx, ky space, check it!!!!
         fld_slice = np.fft.fftshift(fft2(fld_slice))
     
@@ -156,7 +157,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         if misalignQ:
             fld_slice *= np.exp(1j*M3*xmesh)
         if roughnessQ:
-            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C3*np.sin(np.pi/4 + M3/2))
+            #fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C3*np.sin(np.pi/4 + M3/2))
+            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C3*np.sin(np.pi/4))
         #fft to kx, ky space, check it!!!!
         fld_slice = np.fft.fftshift(fft2(fld_slice))
         
@@ -187,7 +189,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
         if misalignQ:
             fld_slice *= np.exp(1j*M4*xmesh)
         if roughnessQ:
-            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C4*np.sin(np.pi/4 + M4/2))
+            #fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C4*np.sin(np.pi/4 + M4/2))
+            fld_slice *= np.exp(1j*2*2*np.pi/lambd_slice*C4*np.sin(np.pi/4))
         #fft to kx, ky space, check it!!!!
         fld_slice = np.fft.fftshift(fft2(fld_slice))
     
@@ -298,8 +301,8 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
         if readfilename == None:
             # make a new field
             t0 = time.time()
-            fld = make_gaus_beam(ncar= ncar, dgrid=dgrid, w0=40e-6, dt=dt, nslice=nslice, trms=10.e-15)
-            fld *= np.sqrt(1e10/np.max(np.sum(np.abs(fld)**2, axis = (1,2))))
+            fld = make_gaus_beam(ncar= ncar, dgrid=dgrid, w0=40e-6, dt=dt, nslice=nslice, trms=20.e-15)
+            fld *= np.sqrt(1e9/np.max(np.sum(np.abs(fld)**2, axis = (1,2))))
             print('took',time.time()-t0,'seconds total to make field with dimensions',fld.shape)
             fld = fld[::isradi,:,:]
             print("fld shape after downsample ", fld.shape)
@@ -317,9 +320,9 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
 
         
 
-        energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt, verbose = True)
+        #energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(fld, dgrid = dgrid, dt=dt, verbose = True)
 
-        init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+        #init_field_info = [energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
     
         #--------------------------------------------------
         # fft in time domain to get spectral representaion
@@ -387,6 +390,8 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     #    
     #  
     #---------------------------------------------------------------------------------------------------
+    
+    
     
     # first round from Undstart to Undend
     t0 = time.time()

@@ -10,7 +10,7 @@ def numstr(x, ndecimals=6):
 # make simplified genesis lattice
 
 #def make_lattice(undKs=[3.51/np.sqrt(2)]*10, und_period=0.030, und_nperiods=110, fodo_length=3.9*2, quad_length=0.3, quad_grad=12.64, latticefilepath='lattice.lat', phaseShifts=None): # LCLS
-def make_lattice(undKs=[1.1742,1.1742,[1.1742,1.1771],[1.1771,1.18],[1.18,1.1829],[1.1829,1.1858]]+[1.1735]*10, und_period=0.026, und_nperiods=130, fodo_length=3.9*2, quad_length=0.3, quad_grad=12.64, latticefilepath='lattice.lat', phaseShifts=None): # LCLS2 HXR
+def make_lattice(undKs=[1.1742,1.1742,[1.1742,1.1771],[1.1771,1.18],[1.18,1.1829],[1.1829,1.1858]]+[1.1735]*10, und_period=0.026, und_nperiods=130, fodo_length=3.9*2, quad_length=0.26, quad_grad=12.64, latticefilepath='lattice.lat', phaseShifts=None): # LCLS2 HXR
 #def make_lattice(undKs=[5.48/np.sqrt(2)]*10, und_period=0.039, und_nperiods=87,  fodo_length=3.9*2, quad_length=0.3, quad_grad=12.64, latticefilepath='lattice.lat', phaseShifts=None): # LCLS2 SXR
     # pass a list of undKs to make undulators
     # for each element in undKs, linear taper undulator if element is a list

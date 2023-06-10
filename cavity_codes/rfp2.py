@@ -788,7 +788,7 @@ def fld_info(fld, dgrid = 400.e-6, dt=1e-6/3e8,verbose = False):
         +'yrms = '+str(xrms) + 'um, ' + 'yfwhm = ' + str(yfwhm) + 'um, ')
     
     
-    return energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm
+    return energy_uJ, maxpower, tmean, trms, tfwhm, xmean, xrms, xfwhm, ymean, yrms, yfwhm
 
 
 def fld_slice_info(fld, dgrid = 400.e-6):
@@ -837,25 +837,33 @@ def fld_slice_info(fld, dgrid = 400.e-6):
     return xrms, xfwhm, yrms, yfwhm
 
 
-def get_spectrum(dfl, dt, xlamds, npad = 0, onaxis=False):
+def get_spectrum(dfl, zsep, xlamds, npad = 0, onaxis=True):
+    h_Plank = 4.135667696e-15
+    c_speed  = 299792458
+    dt = zsep*xlamds/c_speed
+    
     nslice = dfl.shape[0]
     ncar = dfl.shape[1]
     s = np.arange(nslice + 2*npad) * dt
     s_fs = s*1e15
-    h_Plank = 4.135667696e-15
-    c_speed  = 299792458
+    
     
     ws = np.arange(s_fs.shape[0]) / (s_fs[-1] - s_fs[0])
     ws -= np.mean(ws)
     hw0 = h_Plank * c_speed /xlamds
     hws = h_Plank*1e15 * ws + hw0
     
+    if onaxis:
+        field = dfl[:,ncar//2 +1, ncar//2 + 1]
+        field = np.pad(field, (npad, npad))
+        ftfld = np.fft.fftshift(np.fft.fft(field))
+        spectra = np.abs(ftfld)**2
+        #spectra /= np.sum(spectra)
     
-    field = dfl[:,ncar//2 +1, ncar//2 + 1]
-    field = np.pad(field, (npad, npad))
-    ftfld = np.fft.fftshift(np.fft.fft(field))
-    spectra = np.abs(ftfld)**2
-    spectra /= np.sum(spectra)
+    else:
+        field = np.pad(dfl, ((npad, npad), (0, 0), (0, 0)))
+        ftfld = np.fft.fftshift(np.fft.fft(field, axis = 0), axes = 0)
+        spectra = np.sum(np.abs(ftfld)**2, axis = (1, 2))
     
     return hws, spectra
         

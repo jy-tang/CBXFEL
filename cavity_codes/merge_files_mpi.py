@@ -5,6 +5,7 @@ import numpy as np
 import gc
 from rfp2 import *
 from pathlib import Path
+import os
 
 def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
     
@@ -48,8 +49,8 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
                     field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
                 
                 
-                energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-                return_field_info = [Round, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+                energy_uJ, maxpower, tmean, trms, tfwhm, xmean, xrms, xfwhm, ymean, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
+                return_field_info = [Round, energy_uJ, maxpower, tmean, trms, tfwhm, xmean, xrms, xfwhm, ymean, yrms, yfwhm]
                
                 with open(workdir + '/'+saveFilenamePrefix+'_recirc.txt', "a") as myfile:
                     myfile.write(" ".join(str(item) for item in return_field_info))
@@ -57,10 +58,10 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
               
                 
                 #write to disk
-                writefilename = workdir + '/'+ saveFilenamePrefix+"_field_round" + str(Round) + '.dfl'
-                write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+                #writefilename = workdir + '/' + saveFilenamePrefix + "_field_round" + str(Round) + '.dfl'
+                #write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
                 
-                #--------------------for recirculation files ------------------------------
+                #--------------------for transmission files ------------------------------
                 
                 field_t = []
                 for block in range(nblocks):
@@ -74,8 +75,8 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
                     field_t = unpad_dfl_t(field_t, [int(Dpadt), int(Dpadt)])
                 
                 
-                energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
-                return_field_info = [Round, energy_uJ, maxpower, trms, tfwhm, xrms, xfwhm, yrms, yfwhm]
+                energy_uJ, maxpower, tmean, trms, tfwhm, xmean, xrms, xfwhm, ymean, yrms, yfwhm = fld_info(field_t, dgrid = dgrid, dt=dt)
+                return_field_info = [Round, energy_uJ, maxpower, tmean, trms, tfwhm, xmean, xrms, xfwhm, ymean, yrms, yfwhm]
                
                 with open(workdir + '/'+saveFilenamePrefix+'_transmit.txt', "a") as myfile:
                     myfile.write(" ".join(str(item) for item in return_field_info))
@@ -83,8 +84,9 @@ def merge_files(nRoundtrips, workdir, saveFilenamePrefix, dgrid, dt, Dpadt):
               
                 
                 #write to disk
-                writefilename =workdir + '/'+ saveFilenamePrefix+"_field_transmit_round" + str(Round) + '.dfl'
-                write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
+                if Round == 0:
+                    writefilename =workdir + '/'+ saveFilenamePrefix+"_field_transmit_round" + str(Round) + '.dfl'
+                    write_dfl(field_t, writefilename,conjugate_field_for_genesis = False,swapxyQ=False)
                 
                 
                 

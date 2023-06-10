@@ -5,6 +5,7 @@ import subprocess
 
 def submit_mergeFiles(shell_script = 'RunMergeFiles.sh'):
     cmd = 'sbatch '+ shell_script
+    print(cmd)
     x = subprocess.check_output(cmd.split())
     y = x.split()
     print(x)

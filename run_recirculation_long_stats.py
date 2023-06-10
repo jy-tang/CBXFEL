@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import time, os, sys
-from run_recirculation_sdf import start_recirculation
+from run_recirculation_sdf import start_recirculation_stats
 from run_genesis_sdf import *
 from run_mergeFiles_sdf import *
 from rfp2 import *
@@ -20,7 +20,7 @@ import gc
 nRoundtrips = 9          # number of iteration between ebeam shots
 nEbeam_flat_init = 0   # number of ebeam shots
 nEbeam_flat = 0
-nEbeam_chirp = 20
+nEbeam_chirp = 10
 beam_chirp = 20
 
 ncar = 181
@@ -32,17 +32,17 @@ c_speed  = 299792458
 nslice = 1024
 isradi = 1
 npadt = (8196 - nslice//isradi)//2
-npad1 = (512-ncar)//2
+npad1 = (256-ncar)//2
 npadx = [int(npad1), int(npad1) + 1]
 dt = xlamds*zsep/c_speed
 
 
 root_dir = '/sdf/group/beamphysics/jytang/genesis/CBXFEL/'
-folder_name = 'data_long_stats'
+folder_name = 'data_long_stats_400_w0r'
 
 misalignQ = True
-roughnessQ = True
-theta = 200e-9
+roughnessQ = False
+theta = 800e-9
 surface_filename = 'cavity_codes/synthetic_SPring-8'
 # prepare error on crystals
 # prepare error on crystals
@@ -51,6 +51,17 @@ if misalignQ:
     M2 = 2*theta*np.random.randn(1)[0]* 2*np.pi/xlamds
     M3 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
     M4 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
+    #400
+    M1 = 64321.5573049364
+    M2 = 9001.244586578989
+    M3 = -45935.776549619804
+    M4 = -8309.768204209093
+    
+    #600
+    #M1 = 33510.93232610154 
+    #M2 = -76538.80633504392 
+    #M3 = -99136.96869056678
+    #M4 = -95777.98526072034
     print('Misalignment on each mirror')
     print(M1, M2, M3, M4)
 else:
@@ -111,9 +122,9 @@ else:
 for k in range(Nshot_total):
     nametag = 'n' + str(k)
     with open(folder_name + '/'+nametag+'_recirc.txt', "w") as myfile:
-        myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
+        myfile.write("Round energy/uJ peakpower/GW tmean/fs trms/fs  tfwhm/fs xmean/um xrms/um  xfwhm/um xmean/um  yrms/um yfwhm/um \n")
     with open(folder_name + '/'+nametag+'_transmit.txt', "w") as myfile:
-        myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
+        myfile.write("Round energy/uJ peakpower/GW tmean/fs trms/fs  tfwhm/fs  xmean/um xrms/um  xfwhm/um ymean/um yrms/um yfwhm/um \n")
 
    
      #---------------------Make Preparation---------------------------------------------------#
@@ -183,7 +194,7 @@ for k in range(Nshot_total):
     
     # do recirculation on all workers
     t0 = time.time()
-    jobid = start_recirculation(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
+    jobid = start_recirculation_stats(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
                                  l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
                                   verboseQ = 1, # verbose params

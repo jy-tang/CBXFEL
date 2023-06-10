@@ -21,7 +21,7 @@ nRoundtrips = 0          # number of iteration between ebeam shots
 nEbeam_flat_init = 0   # number of ebeam shots
 nEbeam_flat = 0
 nEbeam_chirp = 20
-beam_chirp = 5
+beam_chirp = 10
 
 ncar = 181
 dgrid = 540e-6
@@ -88,6 +88,8 @@ for k in range(Nshot_total):
         # get the max power position
         power = np.sum(np.abs(fld)**2, axis = (1,2))
         c = np.argmax(power)
+        shift = int(len(power)//2 - c)
+        fld = np.roll(fld, shift, axis = 0)
         #cut the dfl
         fld = fld[int(c - nslice/2):int(c + nslice/2), :, :]
         print('fld shape after cutting', fld.shape)
@@ -105,7 +107,7 @@ for k in range(Nshot_total):
         
     t0 = time.time()
     #simulation (change dfl filename)
-    jobid, sim_name = start_simulation(folder_name = folder_name, dKbyK = 0.046,undKs = 0.477,und_period = 0.01,und_nperiods=int(130*0.026/0.01), nslice = nslice, zsep = zsep,
+    jobid, sim_name = start_simulation(folder_name = folder_name, dKbyK = 0.032,undKs = 0.477,und_period = 0.01,und_nperiods=int(130*0.026/0.01), nslice = nslice, zsep = zsep,
                                            nametag = nametag,gamma0 = np.around(3000./0.511,3), 
                                            Nf=2, Nt=30, emitnx = 0.3e-6, emitny = 0.3e-6,
                                            pulseLen = 100e-15, sigma = 20e-15, chirp = chirp, Ipeak = 2e3,
@@ -123,7 +125,7 @@ for k in range(Nshot_total):
     t0 = time.time()
     jobid = start_recirculation(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=1.7834064e-10,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
-                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 50e-6, d2 = 200e-6 # cavity params
+                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
                                   verboseQ = 1, # verbose params
                                  nRoundtrips = nRoundtrips,               # recirculation params
                                  readfilename = root_dir + '/'+folder_name+'/'+sim_name + '.out.dfl' , 

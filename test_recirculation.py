@@ -1,5 +1,5 @@
 from __future__ import print_function
-from run_recirculation_sdf import start_recirculation
+from run_recirculation_sdf import start_recirculation_stats
 from run_mergeFiles_sdf import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,97 +32,100 @@ npadx = [int(npad1), int(npad1) + 1]
 l_cavity = 32*3.9
 l_undulator = 149
 w_cavity = 1
-nRoundtrips = 9
-nametag = 'n2' 
+nRoundtrips = 10
+ 
 
 
 root_dir = '/sdf/group/beamphysics/jytang/genesis/CBXFEL/'
-folder_name = '/test/'
-misalignQ = True
-roughnessQ = False
-theta = 500e-9
+folder_name = '/test_long_surface/'
+misalignQ = False
+roughnessQ = True 
+theta = 400e-9
 surface_filename = 'cavity_codes/synthetic_SPring-8'
 
-# prepare error on crystals
-if misalignQ:
-    M1 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
-    M2 = 2*theta*np.random.randn(1)[0]* 2*np.pi/xlamds
-    M3 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
-    M4 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
-    print('Misalignment on each mirror: ')
-    print(M1, M2, M3, M4)
-else:
-    M1 = M2 = M3 = M4 = 0
+
+for k in [0]:#range(2, 5):
+    nametag = 'n' + str(k)
+    # prepare error on crystals
+    if misalignQ:
+        M1 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
+        M2 = 2*theta*np.random.randn(1)[0]* 2*np.pi/xlamds
+        M3 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
+        M4 = 2*theta*np.random.randn(1)[0] * 2*np.pi/xlamds
+        print(nametag + ' Misalignment on each mirror: ')
+        print(M1, M2, M3, M4)
+    else:
+        M1 = M2 = M3 = M4 = 0
     
 
-if roughnessQ:
-    nx = ny = ncar
-    nx_padded = ncar + int(npadx[0]) + int(npadx[1])
-    dx = 2. * dgrid / ncar
-    # get x, y coordinates
-    xs = (np.arange(nx_padded) - np.floor(nx_padded/2))*dx
-    ys = (np.arange(ny) - np.floor(ny/2))*dx
+    if roughnessQ:
+        nx = ny = ncar
+        nx_padded = ncar + int(npadx[0]) + int(npadx[1])
+        dx = 2. * dgrid / ncar
+        # get x, y coordinates
+        xs = (np.arange(nx_padded) - np.floor(nx_padded/2))*dx
+        ys = (np.arange(ny) - np.floor(ny/2))*dx
     
     
-    fname = root_dir + surface_filename + '_001.txt'
-    C1h = np.loadtxt(fname)
-    C1h *= 1e-10
-    xa = np.linspace(-500e-6, 500e-6, C1h.shape[1])
-    ya = np.linspace(-500e-6, 500e-6, C1h.shape[0])
+        fname = root_dir + surface_filename + '_001.txt'
+        C1h = np.loadtxt(fname)
+        C1h *= 1e-10
+        xa = np.linspace(-500e-6, 500e-6, C1h.shape[1])
+        ya = np.linspace(-500e-6, 500e-6, C1h.shape[0])
     
-    f = interp2d(xa, ya, C1h, kind='cubic')
-    C1 = f(xs, ys)
-    C1 = C1.T
+        f = interp2d(xa, ya, C1h, kind='cubic')
+        C1 = f(xs, ys)
+        C1 = C1.T
     
-    fname = root_dir + surface_filename + '_002.txt'
-    C2h = np.loadtxt(fname)
-    C2h *= 1e-10
-    f = interp2d(xa, ya, C2h, kind='cubic')
-    C2 = f(xs, ys)
-    C2 = C2.T
+        fname = root_dir + surface_filename + '_002.txt'
+        C2h = np.loadtxt(fname)
+        C2h *= 1e-10
+        f = interp2d(xa, ya, C2h, kind='cubic')
+        C2 = f(xs, ys)
+        C2 = C2.T
     
-    fname = root_dir + surface_filename + '_003.txt'
-    C3h = np.loadtxt(fname)
-    C3h *= 1e-10
-    f = interp2d(xa, ya, C3h, kind='cubic')
-    C3 = f(xs, ys)
-    C3 = C3.T
+        fname = root_dir + surface_filename + '_003.txt'
+        C3h = np.loadtxt(fname)
+        C3h *= 1e-10
+        f = interp2d(xa, ya, C3h, kind='cubic')
+        C3 = f(xs, ys)
+        C3 = C3.T
     
-    fname = root_dir + surface_filename + '_004.txt'
-    C4h = np.loadtxt(fname)
-    C4h *= 1e-10
-    f = interp2d(xa, ya, C4h, kind='cubic')
-    C4 = f(xs, ys)
-    C4 = C4.T
-    print('Apply surface roughness')
-else:
-    C1 = C2 = C3 = C4 = None
+        fname = root_dir + surface_filename + '_004.txt'
+        C4h = np.loadtxt(fname)
+        C4h *= 1e-10
+        f = interp2d(xa, ya, C4h, kind='cubic')
+        C4 = f(xs, ys)
+        C4 = C4.T
+        print('Apply surface roughness')
+    else:
+        C1 = C2 = C3 = C4 = None
     
-with open(root_dir + '/' + folder_name + '/'+nametag+'_recirc.txt', "w") as myfile:
-    myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
-with open(root_dir + '/' + folder_name + '/'+nametag+'_transmit.txt', "w") as myfile:
-    myfile.write("Round energy/uJ peakpower/GW trms/fs  tfwhm/fs xrms/um  xfwhm/um yrms/um yfwhm/um \n")
+    with open(root_dir + '/' + folder_name + '/'+nametag+'_recirc.txt', "w") as myfile:
+        myfile.write("Round energy/uJ peakpower/GW tmean/fs trms/fs  tfwhm/fs xmean/um xrms/um  xfwhm/um ymean/um yrms/um yfwhm/um \n")
+    with open(root_dir + '/' + folder_name + '/'+nametag+'_transmit.txt', "w") as myfile:
+        myfile.write("Round energy/uJ peakpower/GW tmean/fs trms/fs  tfwhm/fs xmean/um xrms/um  xfwhm/um ymean/um yrms/um yfwhm/um \n")
     
-# do recirculation on all workers
-t0 = time.time()
-jobid = start_recirculation(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
+    # do recirculation on all workers
+    t0 = time.time()
+    jobid = start_recirculation_stats(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
-                                 l_undulator = l_undulator, l_cavity = l_cavity, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
+                                 l_undulator = 0, l_cavity = l_cavity, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
                                   verboseQ = 1, # verbose params
                                  nRoundtrips = nRoundtrips,               # recirculation params
                                 misalignQ = misalignQ, M1 = M1, M2 = M2, M3 = M3, M4 = M4,        # misalignment parameter
                              roughnessQ = roughnessQ, C1 = C1, C2 = C2, C3 = C3, C4 = C4, 
-                                 readfilename = root_dir +'/data_long/tap0.03_K1.172_nt28_nf4_n6.out.dfl' , 
-                                 seedfilename = 'n0_seed_init.dfl',
+                                 readfilename = None, #root_dir +'/data_long/tap0.03_K1.172_nt28_nf4_n6.out.dfl' , 
+                                 seedfilename = 'test.dfl',
                                        workdir = root_dir + '/' + folder_name + '/' , saveFilenamePrefix = nametag)
     
-all_done([jobid])
-print('It takes ', time.time() - t0, ' seconds to finish recirculation.')
+    all_done([jobid])
+    print('It takes ', time.time() - t0, ' seconds to finish recirculation.')
     
     
     # merge files for each roundtrip on nRoundtrips workers, with larger memory
-t0 = time.time()
-jobid = start_mergeFiles(nRoundtrips =nRoundtrips, workdir = root_dir + '/' + folder_name + '/', saveFilenamePrefix=nametag, dgrid = dgrid, dt = dt, Dpadt = 0)
+    t0 = time.time()
+    jobid = start_mergeFiles(nRoundtrips =nRoundtrips, workdir = root_dir + '/' + folder_name + '/', saveFilenamePrefix=nametag, dgrid = dgrid, dt = dt, Dpadt = 0)
     
-all_done([jobid])
-print('It takes ', time.time() - t0, ' seconds to finish merging files.')
+    all_done([jobid])
+    print('It takes ', time.time() - t0, ' seconds to finish merging files.')
