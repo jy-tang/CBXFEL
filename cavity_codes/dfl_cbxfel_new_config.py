@@ -45,7 +45,7 @@ def Bragg_mirror_reflect(ncar, dgrid, xlamds, nslice, dt, npadx=[0, 0],
     return R0H, R00
 
 
-def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x, y)
+def propagate_slice(fld_slice, npadx,    # fld slice in spectral space, (Ek, x, y)
                              R00_slice, R0H_slice, R00_slice_2, R0H_slice_2,    # Bragg reflection information
                              l_cavity, l_undulator, w_cavity,  # cavity parameter
                              lambd_slice, kx_mesh, ky_mesh, xmesh, ymesh, #fld slice information
@@ -55,7 +55,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # propagate one slice around the cavity
     # take a slice in real space, unpadded, return a slice in real space, unpadded
     
-    d_FM = 0.5
+    d_FM = l_cavity/4
     
      # focal length of the lens
     flens1 = (l_cavity - 2*d_FM)/2
@@ -138,7 +138,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M3
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',R0H_slice_2,fld_slice)
         
     # drift to M4
     Ldrift = w_cavity
@@ -187,7 +187,6 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     nx = ny = ncar
     nx_padded = ncar + int(npadx[0]) + int(npadx[1])
     
-    
     #------------------------------
     # get the size of each sub-task
     #------------------------------
@@ -217,6 +216,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
     Dkx = 2. * np.pi / dx
     kx = Dkx/ 2. * np.linspace(-1.,1.,nx_padded)
     ky = Dkx/ 2. * np.linspace(-1.,1.,ny)
+        
     kx_mesh, ky_mesh = np.meshgrid(kx, ky)
     kx_mesh = kx_mesh.T
     ky_mesh = ky_mesh.T
@@ -361,7 +361,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         
         # propagate the slice from und end to und start
-        fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+        fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,    
                              R00_slice = R00_slice, R0H_slice = R0H_slice,  R00_slice_2 = R00_slice_2, R0H_slice_2 = R0H_slice_2,    
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 
@@ -389,7 +389,7 @@ def recirculate_to_undulator_mpi(zsep, ncar, dgrid, nslice, xlamds=1.261043e-10,
        
         
            # propagate the slice from und start to und start
-            fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,     
+            fld_slice, fld_slice_transmit = propagate_slice(fld_slice = fld_slice, npadx = npadx,   
                              R00_slice = R00_slice, R0H_slice = R0H_slice, R00_slice_2 = R00_slice_2, R0H_slice_2 = R0H_slice_2, 
                              l_cavity = l_cavity, l_undulator = l_undulator, w_cavity = w_cavity,  
                              lambd_slice = lambd_slice, kx_mesh = kx_mesh, ky_mesh = ky_mesh, xmesh = xmesh, ymesh = ymesh, 

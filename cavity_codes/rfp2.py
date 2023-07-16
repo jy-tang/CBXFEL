@@ -478,7 +478,12 @@ def pad_dfl_x(fld, pads):
 def pad_dfl_slice_x(fld_slice, pads):
     fld_slice = np.pad(fld_slice, [pads,[0,0]])
     return fld_slice
-    
+
+def pad_dfl_slice_xy(fld_slice, pads): 
+    fld_slice = np.pad(fld_slice, [pads,pads])
+    return fld_slice
+
+
 def pad_dfl_y(fld, pads):
     fld = np.pad(fld, [[0,0],[0,0],pads])
     return fld
@@ -505,6 +510,10 @@ def unpad_dfl_y(fld, pads):
 
 def unpad_dfl_slice_x(fld_slice, pads):
     fld_slice = fld_slice[pads[0]:-pads[1],:]
+    return fld_slice
+
+def unpad_dfl_slice_xy(fld_slice, pads):
+    fld_slice = fld_slice[pads[0]:-pads[1],pads[0]:-pads[1]]
     return fld_slice
 
 def unpad_dfl_xy(fld, pads):
@@ -837,14 +846,14 @@ def fld_slice_info(fld, dgrid = 400.e-6):
     return xrms, xfwhm, yrms, yfwhm
 
 
-def get_spectrum(dfl, zsep, xlamds, npad = 0, onaxis=True):
+def get_spectrum(dfl, zsep, xlamds, npad = (0,0), onaxis=True):
     h_Plank = 4.135667696e-15
     c_speed  = 299792458
     dt = zsep*xlamds/c_speed
     
     nslice = dfl.shape[0]
     ncar = dfl.shape[1]
-    s = np.arange(nslice + 2*npad) * dt
+    s = np.arange(nslice + npad[0] + npad[1]) * dt
     s_fs = s*1e15
     
     
@@ -855,13 +864,13 @@ def get_spectrum(dfl, zsep, xlamds, npad = 0, onaxis=True):
     
     if onaxis:
         field = dfl[:,ncar//2 +1, ncar//2 + 1]
-        field = np.pad(field, (npad, npad))
+        field = np.pad(field, npad)
         ftfld = np.fft.fftshift(np.fft.fft(field))
         spectra = np.abs(ftfld)**2
         #spectra /= np.sum(spectra)
     
     else:
-        field = np.pad(dfl, ((npad, npad), (0, 0), (0, 0)))
+        field = np.pad(dfl, (npad, (0, 0), (0, 0)))
         ftfld = np.fft.fftshift(np.fft.fft(field, axis = 0), axes = 0)
         spectra = np.sum(np.abs(ftfld)**2, axis = (1, 2))
     

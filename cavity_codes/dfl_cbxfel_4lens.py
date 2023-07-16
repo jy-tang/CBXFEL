@@ -63,10 +63,12 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     z_und_end = z_und_start + l_undulator
     
     # the distance between the mirror and the lens
-    d_FM = z_und_start/2
+    d_FM = l_cavity/4
     
      # focal length of the lens
-    flens = (l_cavity - 2*d_FM)/2
+    flens1 = (l_cavity - 2*d_FM)/2
+    flens2 = (l_cavity - 2*d_FM)/2
+    flens = (l_cavity + w_cavity)/2
     
 
         
@@ -83,22 +85,8 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     if roundtripQ:
         fld_slice = propagate_slice_kspace(field = fld_slice, z = l_undulator, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
-    # drift from UNDEND to l1
-    Ldrift = l_cavity - z_und_end - d_FM    
-    fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
-    
-    #lens1
-    f = flens
-    #ifft to the real space
-    fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-    #apply intracavity focusing CRL
-    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
-    #fft to kx, ky space, check it!!!!
-    fld_slice = np.fft.fftshift(fft2(fld_slice))
-    
-    
-    # drift from l1 to M1
-    Ldrift = d_FM      
+    # drift from UNDEND to M1
+    Ldrift = l_cavity - z_und_end  
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
     
     
@@ -107,74 +95,87 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     # reflect from M1
     fld_slice = np.einsum('i,ij->ij',R0H_slice,fld_slice)
     
+    
+    # drift from M1 to L1
+    Ldrift = w_cavity/2  
+    fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
+    
+    # L1 focus on y direction
+    f = flens
+    #ifft to the real space
+    fld_slice = ifft2(np.fft.ifftshift(fld_slice))
+    #apply intracavity focusing CRL
+    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(ymesh**2))
+    #fft to kx, ky space, check it!!!!
+    fld_slice = np.fft.fftshift(fft2(fld_slice))
         
-        
-    # drift to M2
-    Ldrift = w_cavity
+    # drift from L1 to M2
+    Ldrift = w_cavity/2
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
     
     
      # reflect from M2
     fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
     
-    # drift to l2
+    # drift from M2 to L2
     Ldrift = d_FM
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
-    # lens2
-    f = flens
+    # lens2, focus on x
+    f = flens1
     #ifft to the real space
     fld_slice = ifft2(np.fft.ifftshift(fld_slice))
     #apply intracavity focusing CRL
-    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
+    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 ))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
    
     
-     # drift to the second lens
-    Ldrift = 2*flens
+     # drift from L2 to L3
+    Ldrift = flens1 + flens2
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     
-    # lens3
-    f = flens
+    # lens3, focus on x
+    f = flens2
     #ifft to the real space
     fld_slice = ifft2(np.fft.ifftshift(fld_slice))
     #apply intracavity focusing CRL
-    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
+    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2))
     #fft to kx, ky space, check it!!!!
     fld_slice = np.fft.fftshift(fft2(fld_slice))
         
         
-    # drift to M3
+    # drift from L3 to M3
     Ldrift =  d_FM
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M3
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',R0H_slice_2,fld_slice)
+    
+    # drift from M3 to L4
+    Ldrift =  w_cavity/2
+    fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
+    
+    # L4, focus on y
+    f = flens
+    #ifft to the real space
+    fld_slice = ifft2(np.fft.ifftshift(fld_slice))
+    #apply intracavity focusing CRL
+    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(ymesh**2))
+    #fft to kx, ky space, check it!!!!
+    fld_slice = np.fft.fftshift(fft2(fld_slice))
         
-    # drift to M4
-    Ldrift = w_cavity
+    # drift from L4 to M4
+    Ldrift = w_cavity/2
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M4
     fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
     
-    # drfit from M4 to L4
-    Ldrift = d_FM
-    fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
-    
-    # lens4
-    f = flens
-    #ifft to the real space
-    fld_slice = ifft2(np.fft.ifftshift(fld_slice))
-    #apply intracavity focusing CRL
-    fld_slice *= np.exp(-1j*np.pi/(f*lambd_slice)*(xmesh**2 + ymesh**2))
-    #fft to kx, ky space, check it!!!!
-    fld_slice = np.fft.fftshift(fft2(fld_slice))
         
     # drift to undulator start
-    Ldrift = z_und_start - d_FM
+    Ldrift = z_und_start 
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # recirculation finished, ifft to real space

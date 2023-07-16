@@ -63,7 +63,7 @@ def match_to_FODO(gamma0, emitnx, emitny, L_quad=10*0.026, L_drift=150*0.026, g_
 
     return xrms_match, yrms_match
     
-def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 100e-15, sigma = 10e-15, chirp = 10, Ipeak = 2e3, g_quad=14.584615 ):
+def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und_period = 0.026, und_nperiods=130, ipseed=0, waitQ = False, verboseQ = True, nametag = '',gamma0 = np.around(8000./0.511,3), Nf = 5, Nt = 27, emitnx = 0.3e-6, emitny = 0.3e-6,pulseLen = 100e-15, sigma = 10e-15, chirp = 10, Ipeak = 2e3, g_quad=14.584615,prad0 = 0, dfl_file = None, nslice = 0):
     
     root_dir = os.path.realpath(os.path.curdir)
     cwd =root_dir + '/' + folder_name
@@ -85,13 +85,13 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
     
     
     # be mindful of the length of the filename (genesis can only handle ~20 characters)
-    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs,6)) + "_qg"  + str(int(g_quad*1e1))
+    sim_name = 'tap'+str(np.around(dKbyK,6))+'_K'+str(np.around(undKs,6)) + "_Nf"  + str(int(Nf))
     if len(nametag) > 0:
         sim_name += '_' + nametag
     print(sim_name)
     
     #------------------------Make Lattice----------------------------------------#
-    latticefile =  "lattice"+str(int(undKs*1e6))+"_qg"  + str(int(g_quad*1e1)) + ".dat"
+    latticefile =  "lattice"+str(int(undKs*1e6))+"_Nf"  + str(int(Nf)) + ".dat"
     make_lattice(undKs=[undKs]*40,latticefilepath=latticefile,und_period=und_period, und_nperiods = und_nperiods, quad_grad = g_quad)
     
     
@@ -104,7 +104,7 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
     #I *= 1/np.max(I)*Ipeak
     I = Ipeak*np.ones((100, ))
     gamma = gamma0 + np.linspace(-0.5,0.5,100)*chirp/0.511
-    delgam = np.ones((100,))*0/0.511
+    delgam = np.ones((100,))*1.0/0.511
     enx = np.ones((100,))*emitnx
     eny = np.ones((100,))*emitny
     beamfile={'ZPOS':zs,'CURPEAK':I, 'GAMMA0': gamma, 'DELGAM':delgam, 'EMITX':enx, 'EMITY':eny}
@@ -128,11 +128,11 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
    # g.input['xlamds'] = 1.76363e-09
     
     g.input['delz'] = 2# set to 1 for ESASE
-    g.input['zsep'] = 160# set to 1 for ESASE
+    g.input['zsep'] = 200# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
     g.input['curpeak'] = 2e3 # make sure no random stuff slips in
-    g.input['nslice'] = 0#3865 #0 # have genesis make beam time-slices from the input particle distribution
+    g.input['nslice'] = nslice#3865 #0 # have genesis make beam time-slices from the input particle distribution
     #print('curlen = ', g.input['curlen'])
     #print('ntail = ', g.input['ntail'])
     #print('iotail = ', g.input['iotail'])
@@ -146,11 +146,11 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
     g.input['ishsty'] = 5
     g.input['idmpfld'] = 1
     g.input['ntail'] = 0
-    g.input['ncar'] =361
-    g.input['dgrid'] = 180e-6
+    g.input['ncar'] =181
+    g.input['dgrid'] = 360e-6 
     g.input['alignradf'] = 1
     
-    g.input['prad0'] = 2e7
+    g.input['prad0'] = prad0 
     
     #------------test-----------------------------
     w0 = 2*xrms_match
@@ -165,7 +165,7 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
     g.input['alphay'] = 0.
 
  
-     #g.input['fieldfile'] = 'n8.dfl'
+    g.input['fieldfile'] = dfl_file
     # http://genesis.web.psi.ch/download/documentation/genesis_manual.pdf
     g.input['beamfile'] =  beamfilename
     
@@ -186,8 +186,8 @@ def start_simulation(dKbyK, folder_name, xlamds = 6.3053e-11, undKs = 1.169, und
 #for K in np.linspace(0.4336,0.434, 5):
 #for g_quad in np.linspace(1, 5, 5):
 
-for count in range(6):
-    start_simulation(folder_name = 'data_20keV', xlamds = 6.30524765e-11, dKbyK = 0.03,undKs =0.4336,und_period = 0.026,und_nperiods=130, pulseLen =70e-15, Ipeak = 2e3, sigma = 70e-15, chirp = 0, nametag ='l' + str(count),gamma0 = np.around(8000/0.511,6), Nf=13, Nt = 19, emitnx = 0.3e-6, emitny = 0.3e-6, ipseed = np.random.randint(1000), g_quad = 14)
+#for taper in np.linspace(0, 0.03, 7):
+start_simulation(folder_name = 'data_20keV', xlamds = 6.30524765e-11, dKbyK = 0.0,undKs =0.4335, und_period = 0.026,und_nperiods=130, pulseLen =50e-15, Ipeak = 2e3, sigma = 50e-15, chirp = 0, nametag ='ss',gamma0 = np.around(8000/0.511,6), Nf=12, Nt = 20, emitnx = 0.3e-6, emitny = 0.3e-6, ipseed = np.random.randint(1000), g_quad = 5.0, prad0 = 0, dfl_file = None, nslice = 1200)
     
           
 #for chirp in [5,10,15,20,25,30]:

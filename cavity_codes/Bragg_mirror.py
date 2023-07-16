@@ -92,7 +92,7 @@ def Bragg_mirror_transmission(photon_energies_eV = None, angles_rad = None, d = 
 def plot_Bragg_mirror_response_slice(eph = None, theta = None, theta_slice=np.pi/4., d = 100e-6):
     
     pi = np.pi
-    if not eph:
+    if eph is None:
         eph = np.linspace(9831,9833,5001);
     theta_0 = 45.0*pi/180.; dtheta_0 = 50e-6; ntheta_0 = 101;
     #theta_0 *= 0.
@@ -161,3 +161,22 @@ def plot_Bragg_mirror_response():
     #plt.title('intensity(forward diffration - prompt response)')
     #plt.colorbar(); plt.show()
     
+
+    
+def get_Bragg_mirror_response_eph(eph,  theta_0=np.pi/4., d = 100e-6):
+    
+    
+    R0H = Bragg_mirror_reflection(eph, theta_0, d)
+    R00 = Bragg_mirror_transmission(eph, theta_0, d)
+
+    
+    return np.abs(R0H)**2, np.abs(R00)**2
+                        
+def get_Bragg_mirror_response_theta(theta,  eph_0 = 9831.2, d = 100e-6):
+                        
+    
+    R0H = Bragg_mirror_reflection(eph_0, theta, d)
+    R00 = Bragg_mirror_transmission(eph_0, theta, d)
+
+    
+    return np.abs(R0H)**2, np.abs(R00)**2

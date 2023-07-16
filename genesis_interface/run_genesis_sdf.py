@@ -118,7 +118,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     #I *= 1/np.max(I)*Ipeak
     I = np.ones((100,))*Ipeak
     gamma = gamma0 + np.linspace(-0.5,0.5,100)*chirp/0.511
-    delgam = np.ones((100,))*1/0.511
+    delgam = np.ones((100,))*1.0/0.511
     enx = np.ones((100,))*emitnx
     eny = np.ones((100,))*emitny
     beamfile={'ZPOS':zs,'CURPEAK':I, 'GAMMA0': gamma, 'DELGAM':delgam, 'EMITX':enx, 'EMITY':eny}
@@ -164,7 +164,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['alignradf'] = 1
     
     g.input['prad0'] = prad0
-    w0 = 15e-6
+    w0 = 2*xrms_match
     g.input['zrayl'] = np.pi*w0**2/g.input['xlamds']
     
     if dfl_filename:

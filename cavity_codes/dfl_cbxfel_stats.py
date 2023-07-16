@@ -148,7 +148,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M3
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',R0H_slice_2,fld_slice)
     
     # add error of M3 in real space
     if misalignQ or roughnessQ:

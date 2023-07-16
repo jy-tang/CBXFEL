@@ -19,10 +19,10 @@ from numpy.random import normal
 
 
 nRoundtrips = 9         # number of iteration between ebeam shots
-nEbeam_flat_init = 16   # number of ebeam shots
+nEbeam_flat_init = 9   # number of ebeam shots
 nEbeam_flat = 5
 nEbeam_chirp = 2
-beam_chirp = 5
+beam_chirp = 2
 pulseLen = 50e-15
 sigma = 50e-15
 Ipeak = 2e3
@@ -30,27 +30,27 @@ Ipeak = 2e3
 
 w0 =40e-6
 xlamds = 6.30524765e-11
-zsep = 200
+zsep = 250
+nslice = 950
 ncar = 181
 dgrid = 360.e-6
 delz = 2
 
-undK = 0.4336
+undK = 0.4335
 taper = 0.01
-Nf = 25
-Nt = 7
+Nf = 20
+Nt = 12
 
 c_speed  = 299792458
-nslice = 1500
 isradi = 1
-npadt = (8192 - nslice//isradi)//2
+npadt = (16384 - nslice//isradi)//2
 npad1 = (512-ncar)//2
 npadx = [int(npad1), int(npad1) + 1]
 dt = xlamds*zsep/c_speed
 
 
 root_dir = '/sdf/group/beamphysics/jytang/genesis/CBXFEL/'
-folder_name = 'data_20keV_taper4'
+folder_name = 'data_20keV_taper3_100kHz2'
 
 
 
@@ -138,7 +138,7 @@ for k in range(Nshot_total):
     # do recirculation on all workers
     t0 = time.time()
     jobid = start_recirculation_4lens(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
-                                 npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
+                                 npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,    # padding params
                                  l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
                                   verboseQ = 1, # verbose params
                                  nRoundtrips = nRoundtrips,               # recirculation params

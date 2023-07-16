@@ -24,10 +24,10 @@ nEbeam_flat = 0
 nEbeam_chirp = 10
 beam_chirp = 0
 
-pulseLen = 40e-15 
-sigma = 40e-15  
+pulseLen = 20e-15 
+sigma = 20e-15  
 
-Ipeak = 2e3
+Ipeak = 4e3
 
 
 ncar = 181
@@ -37,7 +37,7 @@ xlamds = 1.261043e-10
 zsep = 80
 delz = 1
 c_speed  = 299792458
-nslice = 1200
+nslice = 600
 isradi = 1
 npadt = (8192 - nslice//isradi)//2
 npad1 = (256-ncar)//2
@@ -45,7 +45,7 @@ npadx = [int(npad1), int(npad1) + 1]
 dt = xlamds*zsep/c_speed
 
 root_dir = '/sdf/group/beamphysics/jytang/genesis/CBXFEL/'
-folder_name = 'data_testbw_flat_40'
+folder_name = 'data_testbw_flat_20_5um'
 #shaped_folder_name = 'flattop_fs'
 
 #record_init_name = "init.txt"
@@ -133,7 +133,7 @@ for k in range(Nshot_total):
     t0 = time.time()
     jobid = start_recirculation(zsep = zsep, ncar = ncar, dgrid = dgrid, nslice = nslice, xlamds=xlamds,           # dfl params
                                  npadt = npadt, Dpadt = 0, npadx = npadx,isradi = isradi,       # padding params
-                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 100e-6, d2 = 100e-6, # cavity params
+                                 l_undulator = 32*3.9, l_cavity = 149, w_cavity = 1, d1 = 5e-6, d2 = 5e-6, # cavity params
                                   verboseQ = 1, # verbose params
                                  nRoundtrips = nRoundtrips,               # recirculation params
                                  readfilename = root_dir + '/'+folder_name+'/'+sim_name + '.out.dfl' , 

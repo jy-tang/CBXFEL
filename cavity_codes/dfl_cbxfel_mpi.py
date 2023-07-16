@@ -1,7 +1,7 @@
 import numpy as np
 import time, os, sys
 from rfp2 import *
-from Bragg_mirror3 import *
+from Bragg_mirror import *
 import time
 from mpi4py import MPI
 import psutil
@@ -57,11 +57,11 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     
     
      # focal length of the lens
-    #flens1 = (l_cavity + w_cavity)/2
-    #flens2 = (l_cavity + w_cavity)/2
+    flens1 = (l_cavity + w_cavity)/2
+    flens2 = (l_cavity + w_cavity)/2
     
-    flens1 = float('inf')
-    flens2 = float('inf')
+    #flens1 = float('inf')
+    #flens2 = float('inf')
     
     # propagation length in cavity
     z_und_start = (l_cavity - l_undulator)/2
@@ -125,7 +125,7 @@ def propagate_slice(fld_slice, npadx,     # fld slice in spectral space, (Ek, x,
     fld_slice = propagate_slice_kspace(field = fld_slice, z = Ldrift, xlamds = lambd_slice, kx = kx_mesh, ky = ky_mesh)
         
     # reflect from M3
-    fld_slice = np.einsum('i,ij->ij',np.flip(R0H_slice_2),fld_slice)
+    fld_slice = np.einsum('i,ij->ij',R0H_slice_2,fld_slice)
         
     # drift to lens
     Ldrift = w_cavity/2

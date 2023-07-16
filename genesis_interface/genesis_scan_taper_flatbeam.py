@@ -101,9 +101,9 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     ts = np.linspace(0., pulseLen, 100)
     sigma_z = sigma*c_speed
     zs = ts*c_speed
-    I = np.exp(-(zs - np.mean(zs))**2/2/sigma_z**2)
-    I *= 1/np.max(I)*Ipeak
-    #I = Ipeak*np.ones((100, ))
+    #I = np.exp(-(zs - np.mean(zs))**2/2/sigma_z**2)
+    #I *= 1/np.max(I)*Ipeak
+    I = Ipeak*np.ones((100, ))
     gamma = gamma0 + np.linspace(-0.5,0.5,100)*chirp/0.511
     delgam = np.ones((100,))*0/0.511
     enx = np.ones((100,))*emitnx
@@ -129,10 +129,10 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
    # g.input['xlamds'] = 1.76363e-09
     
     g.input['delz'] = 2# set to 1 for ESASE
-    g.input['zsep'] = 100# set to 1 for ESASE
+    g.input['zsep'] = 50# set to 1 for ESASE
     #g.input['nslice'] = np.int(1.*g.input['nslice']/g.input['zsep'])
     g.input['ndcut'] = 0  #1000#np.int(g.input['nslice']*0.1)
-    g.input['curpeak'] = 2e3 # make sure no random stuff slips in
+    g.input['curpeak'] = Ipeak # make sure no random stuff slips in
     g.input['nslice'] = 0#3865 #0 # have genesis make beam time-slices from the input particle distribution
     #print('curlen = ', g.input['curlen'])
     #print('ntail = ', g.input['ntail'])
@@ -151,7 +151,7 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
     g.input['dgrid'] = 540e-6
     g.input['alignradf'] = 1
     
-    g.input['prad0'] = 2e8
+    g.input['prad0'] = 1e9
     w0 = 25e-6
     g.input['zrayl'] = np.pi*w0**2/g.input['xlamds']
     
@@ -180,8 +180,8 @@ def start_simulation(dKbyK, folder_name, undKs = 1.169, und_period = 0.026, und_
 #    start_simulation(folder_name = 'for_Ago', dKbyK =  dKbyK,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen =100e-15, sigma = 20e-15, chirp = 0, nametag ='g',gamma0 = np.around(8000./0.511,3), Nf=3, Nt = 29,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6)
 
 #start_simulation(folder_name = 'for_Ago', dKbyK =  0.036,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen =100e-15, sigma = 20e-15, chirp = 0, nametag ='b005',gamma0 = np.around(8000.05/0.511,6), Nf=3, Nt = 29,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, ipseed = np.random.randint(1000))
-
-start_simulation(folder_name = 'data_testbw', dKbyK =  0.03,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen =60e-15, sigma = 20e-15, chirp = 0, nametag ='t2',gamma0 = np.around(8000/0.511,6), Nf=4, Nt = 28,Ipeak = 2e3, emitnx = 0.3e-6, emitny = 0.3e-6, ipseed = np.random.randint(1000))
+for taper in np.linspace(0.04, 0.08, 5):
+    start_simulation(folder_name = 'data_phaselock', dKbyK =  taper,undKs = 1.172,und_period = 0.026,und_nperiods=130, pulseLen =15e-15, Ipeak = 7e3, sigma = 20e-15, chirp = 0, nametag ='c',gamma0 = np.around(8000/0.511,6), Nf=2, Nt = 30, emitnx = 0.3e-6, emitny = 0.3e-6, ipseed = np.random.randint(1000))
     
     
 #for chirp in [5,10,15,20,25,30]:
